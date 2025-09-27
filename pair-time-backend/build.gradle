@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.kyj'
+version = '0.0.1-SNAPSHOT'
+description = 'Demo project for Spring Boot'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("http://192.168.56.1:9090/repository/kyj-lib-core/")
+        allowInsecureProtocol = true // HTTP 사용 시 필수
+        credentials {
+            username = "admin"
+            password = "1234"
+        }
+    }
+}
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+dependencies {
+    dependencies {
+//		implementation 'com.kyj:kyj-lib-core-security-auth:0.0.1-SNAPSHOT'
+        implementation 'com.kyj:kyj-lib-core:0.0.1-SNAPSHOT'
+        implementation 'com.kyj:kyj-lib-core-jpa:0.0.1-SNAPSHOT'
+        implementation 'com.kyj:kyj-lib-core-redis:0.0.1-SNAPSHOT'
+        implementation 'com.kyj:kyj-lib-core-security-client:0.0.1-SNAPSHOT'
+        annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
+        annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+        annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+        annotationProcessor 'org.projectlombok:lombok:1.18.30' // 어노테이션 처리
+        compileOnly 'org.projectlombok:lombok:1.18.30' // 컴파일 시만 필요
+
+    }
+
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
