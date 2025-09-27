@@ -35,6 +35,11 @@ dependencies {
         implementation 'com.kyj:kyj-lib-core-jpa:0.0.1-SNAPSHOT'
         implementation 'com.kyj:kyj-lib-core-redis:0.0.1-SNAPSHOT'
         implementation 'com.kyj:kyj-lib-core-security-client:0.0.1-SNAPSHOT'
+        implementation 'com.kyj:kyj-lib-core-rdb:0.0.1-SNAPSHOT'
+
+        implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+        implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+        implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
         annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
         annotationProcessor "jakarta.annotation:jakarta.annotation-api"
         annotationProcessor "jakarta.persistence:jakarta.persistence-api"
