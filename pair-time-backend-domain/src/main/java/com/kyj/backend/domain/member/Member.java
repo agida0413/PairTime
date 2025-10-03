@@ -35,6 +35,9 @@ public class Member extends BaseEntity {
     @Column(name="profile",length = 150 )
     private String profile;
 
+    @Column(name="nickname",length = 300 , nullable = false)
+    @NotNull
+    private String nickname;
     @Column(name = "role",length = 40 , nullable = false)
     @NotNull //따로 DDL문 작성
     private String role = "ROLE_USER";
