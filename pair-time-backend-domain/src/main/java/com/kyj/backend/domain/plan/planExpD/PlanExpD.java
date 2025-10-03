@@ -3,7 +3,9 @@ package com.kyj.backend.domain.plan.planExpD;
 import com.kyj.backend.domain.plan.planExp.PlanExp;
 import com.kyj.core.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import jakarta.validation.constraints.NotNull;
 
@@ -12,7 +14,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "PLAN_EXP_D")
 @Getter
-@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlanExpD extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,4 +33,41 @@ public class PlanExpD extends BaseEntity {
     @JoinColumn(name = "plan_exp_id")
     private PlanExp planExp;
 
+
+    public void setPlanExp(PlanExp planExp){
+        this.planExp = planExp;
+    }
+
+    private PlanExpD(Builder builder) {
+        this.expenditure = builder.expenditure;
+        this.title = builder.title;
+        this.planExp = builder.planExp;
+    }
+
+    static class Builder {
+        private BigDecimal expenditure;
+        private String title;
+        private PlanExp planExp;
+
+        Builder() {}
+
+        Builder expenditure(BigDecimal expenditure) {
+            this.expenditure = expenditure;
+            return this;
+        }
+
+        Builder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        Builder planExp(PlanExp planExp) {
+            this.planExp = planExp;
+            return this;
+        }
+
+        PlanExpD build() {
+            return new PlanExpD(this);
+        }
+    }
 }

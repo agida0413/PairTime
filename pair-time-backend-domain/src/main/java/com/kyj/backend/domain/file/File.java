@@ -46,4 +46,51 @@ public class File extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "obj_id")
     private PlanPost planPost;
+
+    private File(Builder builder) {
+        this.fileType = builder.fileType;
+        this.fileUrl = builder.fileUrl;
+        this.filename = builder.filename;
+        this.priority = builder.priority;
+        this.planPost = builder.planPost;
+    }
+
+    static class Builder {
+        private FileType fileType;
+        private String fileUrl;
+        private String filename;
+        private int priority;
+        private PlanPost planPost;
+
+        Builder() {}
+
+        Builder fileType(FileType fileType) {
+            this.fileType = fileType;
+            return this;
+        }
+
+        Builder fileUrl(String fileUrl) {
+            this.fileUrl = fileUrl;
+            return this;
+        }
+
+        Builder filename(String filename) {
+            this.filename = filename;
+            return this;
+        }
+
+        Builder priority(int priority) {
+            this.priority = priority;
+            return this;
+        }
+
+        Builder planPost(PlanPost planPost) {
+            this.planPost = planPost;
+            return this;
+        }
+
+        File build() {
+            return new File(this);
+        }
+    }
 }

@@ -6,8 +6,10 @@ import com.kyj.backend.domain.plan.planReview.PlanReview;
 import com.kyj.core.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import jakarta.validation.constraints.NotNull;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.List;
 @Entity
 @Table(name = "MEMBER")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -97,4 +100,43 @@ public class Member extends BaseEntity {
         planReview.setMember(null);
     }
 
+    private Member(Builder builder) {
+        this.username = builder.username;
+        this.email = builder.email;
+        this.profile = builder.profile;
+        this.role = builder.role;
+    }
+
+    static class Builder {
+        private String username;
+        private String email;
+        private String profile;
+        private String role = "ROLE_USER";
+
+        Builder() {}
+
+        Builder username(String username) {
+            this.username = username;
+            return this;
+        }
+
+        Builder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+        Builder profile(String profile) {
+            this.profile = profile;
+            return this;
+        }
+
+        Builder role(String role) {
+            this.role = role;
+            return this;
+        }
+
+        Member build() {
+            return new Member(this);
+        }
+    }
 }

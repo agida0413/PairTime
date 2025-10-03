@@ -4,7 +4,9 @@ import com.kyj.backend.domain.plan.planExpD.PlanExpD;
 import com.kyj.backend.domain.plan.planM.PlanM;
 import com.kyj.core.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
@@ -13,7 +15,7 @@ import java.util.List;
 @Entity
 @Table(name = "PLAN_EXP")
 @Getter
-@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlanExp extends BaseEntity {
 
     @Id
@@ -27,6 +29,10 @@ public class PlanExp extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plan_id")
     private PlanM planM;
+
+    public void setPlanM(PlanM planM){
+        this.planM = planM;
+    }
 
     /**
      * 연관관계 편의메소드
@@ -46,4 +52,22 @@ public class PlanExp extends BaseEntity {
         planExpD.setPlanExp(null);
     }
 
+    private PlanExp(Builder builder) {
+        this.planM = builder.planM;
+    }
+
+    static class Builder {
+        private PlanM planM;
+
+        Builder() {}
+
+        Builder planM(PlanM planM) {
+            this.planM = planM;
+            return this;
+        }
+
+        PlanExp build() {
+            return new PlanExp(this);
+        }
+    }
 }
