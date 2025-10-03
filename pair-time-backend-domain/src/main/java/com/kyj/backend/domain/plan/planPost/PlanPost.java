@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "PLAN_POST")

@@ -6,6 +6,7 @@ import com.kyj.core.jpa.entity.BaseEntity;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "PLAN_GRP_TEMP")
