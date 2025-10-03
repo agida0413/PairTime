@@ -1,6 +1,6 @@
 # KYJ Core Library 통합 설정
 server:
-  port: 8080
+  port: 8082
 
 spring:
 
@@ -69,23 +69,25 @@ spring:
 
 
 # ===== 모니터링 설정 (kyj-lib-core 포함) =====
-#management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: health,info,metrics,prometheus
-#  endpoint:
-#    health:
-#      show-details: always
-#      probes:
-#        enabled: true
-#  health:
-#    readinessstate:
-#      enabled: true
-#  metrics:
-#    export:
-#      prometheus:
-#        enabled: true
+management:
+  server:
+    port: 8083
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    readinessstate:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 # ===== AWS S3 설정 (kyj-lib-core-file) =====
 s3:
@@ -124,6 +126,8 @@ kyj:
         - /docs
         - /oauth2/**
         - /login/**
+        - /actuator/**
+
 
 
 # ===== 로깅 설정 =====
