@@ -20,39 +20,45 @@ pipeline {
         stage('Environment Info') {
             steps {
                 echo '========== Environment Information =========='
-                sh '''
-                    echo "Java Version:"
-                    java -version
-                    echo "Current Directory:"
-                    pwd
-                    ls -la
-                    echo "Checking gradlew location:"
-                    ls -la gradlew || echo "gradlew not found"
-                    echo "Gradle Version:"
-                    chmod +x gradlew
-                    ./gradlew --version
-                '''
+                dir('pair-time-backend-domain') {
+                    sh '''
+                        echo "Java Version:"
+                        java -version
+                        echo "Current Directory:"
+                        pwd
+                        ls -la
+                        echo "Gradle Version:"
+                        chmod +x gradlew
+                        ./gradlew --version
+                    '''
+                }
             }
         }
 
         stage('Clean') {
             steps {
                 echo '========== Cleaning previous builds =========='
-                sh './gradlew clean'
+                dir('pair-time-backend-domain') {
+                    sh './gradlew clean'
+                }
             }
         }
 
         stage('Build') {
             steps {
                 echo '========== Building Domain Module =========='
-                sh './gradlew build -x test --info'
+                dir('pair-time-backend-domain') {
+                    sh './gradlew build -x test --info'
+                }
             }
         }
 
         stage('Test') {
             steps {
                 echo '========== Running Tests =========='
-                sh './gradlew test'
+                dir('pair-time-backend-domain') {
+                    sh './gradlew test'
+                }
             }
             post {
                 always {
@@ -72,7 +78,9 @@ pipeline {
         stage('Publish to Nexus') {
             steps {
                 echo '========== Publishing to Nexus =========='
-                sh './gradlew publish --info'
+                dir('pair-time-backend-domain') {
+                    sh './gradlew publish --info'
+                }
             }
         }
 
