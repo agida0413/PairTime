@@ -1,6 +1,8 @@
 package com.kyj.backend.auth.service;
 
+import com.kyj.backend.auth.mapper.MemberEntityDTOMapper;
 import com.kyj.backend.auth.repository.MemberRepository;
+import com.kyj.backend.domain.member.AuthMemberEntityManager;
 import com.kyj.backend.domain.member.Member;
 import com.kyj.core.api.CmErrCode;
 import com.kyj.core.exception.custom.KyjBizException;
@@ -11,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 /**
  * 2025-10-03
@@ -25,8 +29,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Transactional(readOnly = true)
 public class CustomAuthMemberService implements AuthMemberService {
-
+    /**
+     * 회원 JPA리파지토리
+     */
     private final MemberRepository memberRepository;
+    /**
+     * DTO Entity 매퍼
+     */
+    private final MemberEntityDTOMapper memberEntityDTOMapper;
+
     /**
      * 회원 조회 또는 생성
      * @param oAuth2Response
@@ -38,14 +49,6 @@ public class CustomAuthMemberService implements AuthMemberService {
 
         String username =   oAuth2Response.getProviderId() + "_" + oAuth2Response.getEmail();
 
-        AuthMemberDTO paramAuthMemberDTO = AuthMemberDTO.builder()
-                    .username(username)
-                    .email(oAuth2Response.getEmail())
-                    .role("ROLE_USER")
-                    .provider(oAuth2Response.getProvider())
-                    .providerId(oAuth2Response.getProviderId())
-                    .active(true)
-                    .build();
 
         Member member = memberRepository.findByUsername(username)
                 .orElseGet(() -> {
@@ -53,13 +56,39 @@ public class CustomAuthMemberService implements AuthMemberService {
                     return null;
                 });
 
+        //AuthMemberDTO 생성
+        AuthMemberDTO paramAuthMemberDTO = AuthMemberDTO.builder()
+                .username(username)
+                .email(oAuth2Response.getEmail())
+                .role("ROLE_USER")
+                .provider(oAuth2Response.getProvider())
+                .providerId(oAuth2Response.getProviderId())
+                .active(true)
+                .profile(oAuth2Response.getProfile())
+                .nickname(oAuth2Response.getNickname())
+                .build();
+
+        AuthMemberDTO returnAuthMemberDTO =null;
+
         if(member == null){
+            //회원가입 엔티티 생성(DDD)
+            Optional<Member> optionalJoinMember = AuthMemberEntityManager.createJoinMember(paramAuthMemberDTO);
+
+            if(optionalJoinMember.isPresent()){
+                Member joinMember =  optionalJoinMember.get();
+                memberRepository.save(joinMember);
+                log.info("회원가입 세팅 = {}",joinMember.getUsername());
+                returnAuthMemberDTO=  memberEntityDTOMapper.toAuthMemberDTO(joinMember);
+            }else{
+                log.error("findOrCreateMember.Member 객체 생성 실패");
+                return null;
+            }
 
         }
 
+        log.info("회원가입 완료 = {}",returnAuthMemberDTO.getUsername());
 
-
-        return null;
+        return returnAuthMemberDTO;
     }
 
     /**
@@ -69,7 +98,13 @@ public class CustomAuthMemberService implements AuthMemberService {
      */
     @Override
     public AuthMemberDTO findMemberByUsername(String username) {
-        return null;
+
+       Member member = memberRepository.findByUsername(username).orElseGet(()->{
+           log.info("CustomAuthMemberService.findMemberByUsername return null");
+           return null;
+        });
+        log.info("CustomAuthMemberService.findMemberByUsername 조회 성공 = {}",member.getUsername());
+        return memberEntityDTOMapper.toAuthMemberDTO(member);
     }
 
     /**
@@ -79,10 +114,15 @@ public class CustomAuthMemberService implements AuthMemberService {
      */
     @Override
     public AuthMemberDTO findMemberByUserId(String userId) {
+
         Long id = Long.parseLong(userId);
 
-
-        return null;
+      Member member=  memberRepository.findById(id).orElseGet(()->{
+            log.info("CustomAuthMemberService.findMemberByUserId return null");
+            return null;
+        });
+        log.info("CustomAuthMemberService.findMemberByUserId 조회 성공 = {}",member.getUsername());
+        return memberEntityDTOMapper.toAuthMemberDTO(member);
     }
 
     /**

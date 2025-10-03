@@ -14,6 +14,9 @@ public interface MemberEntityDTOMapper {
 
 
     @Mapping(source = "id", target = "userId")
+    @Mapping(target = "provider", ignore = true)
+    @Mapping(target = "providerId", ignore = true)
+    @Mapping(target = "active", constant = "true") // 기본값 설정
     AuthMemberDTO toAuthMemberDTO(Member member);
 
 

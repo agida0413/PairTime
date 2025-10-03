@@ -2,6 +2,7 @@ package com.kyj.backend.domain.member;
 
 import com.kyj.core.security.auth.dto.AuthMemberDTO;
 import com.kyj.core.security.auth.dto.oauth2.OAuth2Response;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
@@ -13,15 +14,20 @@ import java.util.Optional;
  * ex - > updateMember() - > member.set()가능
  * (다른 패키지는 세터 불가)
  */
+@Slf4j
 public class AuthMemberEntityManager {
-
+    /**
+     * 새로운 아이디 인서트를 위한 메소드
+     * @param paramAuthMemberDTO
+     * @return
+     */
     public static Optional<Member> createJoinMember(AuthMemberDTO paramAuthMemberDTO){
 
-      return  new Member.Builder()
+      return Optional.ofNullable(new Member.Builder()
               .email(paramAuthMemberDTO.getEmail())
-              .profile(paramAuthMemberDTO.get)
+              .profile(paramAuthMemberDTO.getProfile())
               .role("ROLE_USER")
               .username(paramAuthMemberDTO.getUsername())
-              .build();
+              .build());
     }
 }
