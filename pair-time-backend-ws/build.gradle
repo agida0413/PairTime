@@ -1,17 +1,47 @@
 plugins {
     id 'java'
+    id 'org.springframework.boot' version '3.5.6'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.kyj'
-version = '1.0-SNAPSHOT'
+version = '0.0.1-SNAPSHOT'
+description = 'PairTime Backend WebSocket'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("http://192.168.56.1:9090/repository/kyj-lib-core/")
+        allowInsecureProtocol = true
+        credentials {
+            username = "admin"
+            password = "1234"
+        }
+    }
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    // 도메인 모듈 의존성 추가
+    implementation project(":pair-time-backend-domain")
+
+    // 기타 의존성
+    implementation 'com.kyj:kyj-lib-core:0.0.1-SNAPSHOT'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 test {
