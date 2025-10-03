@@ -7,7 +7,9 @@ import com.kyj.backend.domain.plan.planPost.PlanPost;
 import com.kyj.backend.domain.plan.planReview.PlanReview;
 import com.kyj.core.jpa.entity.BaseEntity;
 import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -18,7 +20,7 @@ import java.util.List;import jakarta.persistence.*;
 @Entity
 @Table(name = "PLAN_M")
 @Getter
-@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlanM extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "plan_id")
@@ -83,6 +85,13 @@ public class PlanM extends BaseEntity {
     private Member member;
 
 
+    public void setPlanGrp(PlanGrp planGrp){
+        this.planGrp = planGrp;
+    }
+
+    public void setMember(Member member){
+        this.member = member;
+    }
     /**
      * 연관관계 편의 메소드
      * @param planPost
@@ -134,5 +143,80 @@ public class PlanM extends BaseEntity {
     public void removePlanReview(PlanReview planReview){
         this.planReviewList.remove(planReview);
         planReview.setPlanM(null);
+    }
+
+    private PlanM(Builder builder) {
+        this.title = builder.title;
+        this.content = builder.content;
+        this.alarmYn = builder.alarmYn;
+        this.startAt = builder.startAt;
+        this.endAt = builder.endAt;
+        this.delYn = builder.delYn;
+        this.planType = builder.planType;
+        this.planGrp = builder.planGrp;
+        this.member = builder.member;
+    }
+
+    static class Builder {
+        private String title;
+        private String content;
+        private String alarmYn = "N";
+        private LocalDateTime startAt;
+        private LocalDateTime endAt;
+        private String delYn = "N";
+        private PlanType planType;
+        private PlanGrp planGrp;
+        private Member member;
+
+        Builder() {}
+
+        Builder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        Builder content(String content) {
+            this.content = content;
+            return this;
+        }
+
+        Builder alarmYn(String alarmYn) {
+            this.alarmYn = alarmYn;
+            return this;
+        }
+
+        Builder startAt(LocalDateTime startAt) {
+            this.startAt = startAt;
+            return this;
+        }
+
+        Builder endAt(LocalDateTime endAt) {
+            this.endAt = endAt;
+            return this;
+        }
+
+        Builder delYn(String delYn) {
+            this.delYn = delYn;
+            return this;
+        }
+
+        Builder planType(PlanType planType) {
+            this.planType = planType;
+            return this;
+        }
+
+        Builder planGrp(PlanGrp planGrp) {
+            this.planGrp = planGrp;
+            return this;
+        }
+
+        Builder member(Member member) {
+            this.member = member;
+            return this;
+        }
+
+        PlanM build() {
+            return new PlanM(this);
+        }
     }
 }
