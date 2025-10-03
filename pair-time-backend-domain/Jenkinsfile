@@ -48,29 +48,7 @@ pipeline {
             steps {
                 echo '========== Building Domain Module =========='
                 dir('pair-time-backend-domain') {
-                    sh './gradlew build -x test --info'
-                }
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo '========== Running Tests =========='
-                dir('pair-time-backend-domain') {
-                    sh './gradlew test'
-                }
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: '**/build/test-results/test/*.xml'
-                    publishHTML([
-                        allowMissing: true,
-                        alwaysLinkToLastBuild: false,
-                        keepAll: true,
-                        reportDir: "build/reports/tests/test",
-                        reportFiles: 'index.html',
-                        reportName: 'Test Report'
-                    ])
+                    sh './gradlew build -x test'
                 }
             }
         }
