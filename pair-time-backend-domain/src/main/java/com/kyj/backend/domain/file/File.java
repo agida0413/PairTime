@@ -62,6 +62,9 @@ public class File extends BaseEntity {
         this.priority = priority;
     }
 
+    public void setPlanPost(PlanPost planPost){
+        this.planPost =planPost;
+    }
     private File(Builder builder) {
         this.fileType = builder.fileType;
         this.fileUrl = builder.fileUrl;
