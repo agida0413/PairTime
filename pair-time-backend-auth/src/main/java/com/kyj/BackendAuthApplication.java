@@ -1,10 +1,13 @@
 package com.kyj;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 @SpringBootApplication
 public class BackendAuthApplication {
 
     public static void main(String[] args) {
-        BackendAuthApplication.run(BackendApplication.class, args);
+        SpringApplication.run(BackendAuthApplication.class, args);
     }
 
 }
