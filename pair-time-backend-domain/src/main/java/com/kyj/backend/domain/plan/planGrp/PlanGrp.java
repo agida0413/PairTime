@@ -5,6 +5,7 @@ import com.kyj.backend.domain.plan.planM.PlanM;
 import com.kyj.core.jpa.entity.BaseEntity;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
