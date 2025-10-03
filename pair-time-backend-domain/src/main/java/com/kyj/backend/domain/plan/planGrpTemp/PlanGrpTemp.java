@@ -41,6 +41,18 @@ public class PlanGrpTemp extends BaseEntity {
     private Member member;
 
 
+    void setInviteToken(String inviteToken) {
+        this.inviteToken = inviteToken;
+    }
+
+    void setIsCreated(String isCreated) {
+        this.isCreated = isCreated;
+    }
+
+    void setReceiveEmail(String receiveEmail) {
+        this.receiveEmail = receiveEmail;
+    }
+
     public void setMember(Member member){
         this.member = member;
     }

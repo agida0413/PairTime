@@ -47,6 +47,22 @@ public class File extends BaseEntity {
     @JoinColumn(name = "obj_id")
     private PlanPost planPost;
 
+    void setFileType(FileType fileType) {
+        this.fileType = fileType;
+    }
+
+    void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
+
+    void setFilename(String filename) {
+        this.filename = filename;
+    }
+
+    void setPriority(int priority) {
+        this.priority = priority;
+    }
+
     private File(Builder builder) {
         this.fileType = builder.fileType;
         this.fileUrl = builder.fileUrl;

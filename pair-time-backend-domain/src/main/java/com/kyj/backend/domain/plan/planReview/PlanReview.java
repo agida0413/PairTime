@@ -33,6 +33,10 @@ public class PlanReview extends BaseEntity {
     private Member member;
 
 
+    void setRating(BigDecimal rating) {
+        this.rating = rating;
+    }
+
     public void setPlanM(PlanM planM){
         this.planM = planM;
     }

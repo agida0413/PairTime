@@ -85,6 +85,34 @@ public class PlanM extends BaseEntity {
     private Member member;
 
 
+    void setTitle(String title) {
+        this.title = title;
+    }
+
+    void setContent(String content) {
+        this.content = content;
+    }
+
+    void setAlarmYn(String alarmYn) {
+        this.alarmYn = alarmYn;
+    }
+
+    void setStartAt(LocalDateTime startAt) {
+        this.startAt = startAt;
+    }
+
+    void setEndAt(LocalDateTime endAt) {
+        this.endAt = endAt;
+    }
+
+    void setDelYn(String delYn) {
+        this.delYn = delYn;
+    }
+
+    void setPlanType(PlanType planType) {
+        this.planType = planType;
+    }
+
     public void setPlanGrp(PlanGrp planGrp){
         this.planGrp = planGrp;
     }
