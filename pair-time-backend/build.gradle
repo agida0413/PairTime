@@ -29,26 +29,29 @@ configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 dependencies {
-    dependencies {
-//		implementation 'com.kyj:kyj-lib-core-security-auth:0.0.1-SNAPSHOT'
-        implementation 'com.kyj:kyj-lib-core:0.0.1-SNAPSHOT'
-        implementation 'com.kyj:kyj-lib-core-jpa:0.0.1-SNAPSHOT'
-        implementation 'com.kyj:kyj-lib-core-redis:0.0.1-SNAPSHOT'
-        implementation 'com.kyj:kyj-lib-core-security-client:0.0.1-SNAPSHOT'
-        implementation 'com.kyj:kyj-lib-core-rdb:0.0.1-SNAPSHOT'
+    // 도메인 모듈 의존성
+//    implementation 'com.kyj:pair-time-backend-domain:0.0.1-SNAPSHOT'
 
-        implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
-        implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
-        implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
-        annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
-        annotationProcessor "jakarta.annotation:jakarta.annotation-api"
-        annotationProcessor "jakarta.persistence:jakarta.persistence-api"
-        annotationProcessor 'org.projectlombok:lombok:1.18.30' // 어노테이션 처리
-        compileOnly 'org.projectlombok:lombok:1.18.30' // 컴파일 시만 필요
+    // 라이브러리 의존성
+    implementation 'com.kyj:kyj-lib-core:0.0.1-SNAPSHOT'
+    implementation 'com.kyj:kyj-lib-core-file:0.0.1-SNAPSHOT'
+    implementation 'com.kyj:kyj-lib-core-redis:0.0.1-SNAPSHOT'
+    implementation 'com.kyj:kyj-lib-core-security-client:0.0.1-SNAPSHOT'
+    implementation 'com.kyj:kyj-lib-core-rdb:0.0.1-SNAPSHOT'
 
-    }
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
+    // Lombok
+    annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+    annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
 
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {
