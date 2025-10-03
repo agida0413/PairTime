@@ -4,12 +4,9 @@ pipeline {
     environment {
         NEXUS_URL = 'http://192.168.56.1:9090'
         NEXUS_REPOSITORY = 'kyj-lib-core'
-        MODULE_PATH = 'pair-time-backend-domain'
         ARTIFACT_ID = 'pair-time-backend-domain'
         GROUP_ID = 'com.kyj'
         VERSION = '0.0.1-SNAPSHOT'
-        // 프로젝트 루트 디렉토리 설정
-        PROJECT_ROOT = "${WORKSPACE}"
     }
 
     stages {
@@ -23,50 +20,39 @@ pipeline {
         stage('Environment Info') {
             steps {
                 echo '========== Environment Information =========='
-                dir("${PROJECT_ROOT}") {
-                    sh '''
-                        echo "Java Version:"
-                        java -version
-                        echo "Current Directory:"
-                        pwd
-                        ls -la
-                        echo "Checking gradlew location:"
-                        ls -la gradlew || echo "gradlew not found in current directory"
-                        echo "Gradle Version:"
-                        chmod +x gradlew
-                        ./gradlew --version
-                    '''
-                }
+                sh '''
+                    echo "Java Version:"
+                    java -version
+                    echo "Current Directory:"
+                    pwd
+                    ls -la
+                    echo "Checking gradlew location:"
+                    ls -la gradlew || echo "gradlew not found"
+                    echo "Gradle Version:"
+                    chmod +x gradlew
+                    ./gradlew --version
+                '''
             }
         }
 
         stage('Clean') {
             steps {
                 echo '========== Cleaning previous builds =========='
-                dir("${PROJECT_ROOT}") {
-                    sh '''
-                        chmod +x gradlew
-                        ./gradlew :${MODULE_PATH}:clean
-                    '''
-                }
+                sh './gradlew clean'
             }
         }
 
         stage('Build') {
             steps {
                 echo '========== Building Domain Module =========='
-                dir("${PROJECT_ROOT}") {
-                    sh './gradlew :${MODULE_PATH}:build -x test --info'
-                }
+                sh './gradlew build -x test --info'
             }
         }
 
         stage('Test') {
             steps {
                 echo '========== Running Tests =========='
-                dir("${PROJECT_ROOT}") {
-                    sh './gradlew :${MODULE_PATH}:test'
-                }
+                sh './gradlew test'
             }
             post {
                 always {
@@ -75,7 +61,7 @@ pipeline {
                         allowMissing: true,
                         alwaysLinkToLastBuild: false,
                         keepAll: true,
-                        reportDir: "${MODULE_PATH}/build/reports/tests/test",
+                        reportDir: "build/reports/tests/test",
                         reportFiles: 'index.html',
                         reportName: 'Test Report'
                     ])
@@ -86,9 +72,7 @@ pipeline {
         stage('Publish to Nexus') {
             steps {
                 echo '========== Publishing to Nexus =========='
-                dir("${PROJECT_ROOT}") {
-                    sh './gradlew :${MODULE_PATH}:publish --info'
-                }
+                sh './gradlew publish --info'
             }
         }
 
