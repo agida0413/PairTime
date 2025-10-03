@@ -1,0 +1,183 @@
+# KYJ Core Library 통합 설정
+server:
+  tomcat:
+    mbeanregistry:
+      enabled: true
+spring:
+  # 애플리케이션 기본 설정
+  application:
+    name: pair-time-backend-auth
+
+  # ===== 이메일 설정 (kyj-lib-core) =====
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # ===== 데이터베이스 설정 (kyj-lib-core-rdb, kyj-lib-core-jpa) =====
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#    hikari:
+#      maximum-pool-size: 20
+#      minimum-idle: 5
+#      connection-timeout: 30000
+#      idle-timeout: 600000
+#      max-lifetime: 1800000
+
+  # JPA 설정 (kyj-lib-core-jpa)
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # ===== Redis 설정 (kyj-lib-core-redis) =====
+  redis:
+    host: 100.114.34.71
+    port: 6380
+
+#  # ===== Kafka 설정 (kyj-lib-core-kafka) =====
+#  kafka:
+#    bootstrap-servers: 100.114.34.71:9095,100.114.34.71:9096,100.114.34.71:9097
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      acks: all
+#      retries: 3
+#    consumer:
+#      group-id: ${KAFKA_CONSUMER_GROUP:kyj-core-group}
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      auto-offset-reset: latest
+#      enable-auto-commit: false
+#    listener:
+#      ack-mode: manual
+
+  # ===== OAuth2 설정 (kyj-lib-core-security-auth) =====
+  security:
+    oauth2:
+      client:
+        registration:
+          naver:
+            client-name: naver
+            client-id: ${NAVER_CLIENT_ID}
+            client-secret: ${NAVER_CLIENT_SECRET}
+            redirect-uri: ${NAVER_OAUTH2_REDIRECT_URL}
+            authorization-grant-type: authorization_code
+            scope:
+              - email
+          google:
+            client-name: google
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_OAUTH2_REDIRECT_URL}
+            authorization-grant-type: authorization_code
+            scope:
+              - email
+          kakao:
+            client-name: kakao
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ""
+            redirect-uri: ${KAKAO_OAUTH2_REDIRECT_URL}
+            authorization-grant-type: authorization_code
+            scope:
+              - account_email
+
+        provider:
+          naver:
+            authorization-uri: https://nid.naver.com/oauth2.0/authorize
+            token-uri: https://nid.naver.com/oauth2.0/token
+            user-info-uri: https://openapi.naver.com/v1/nid/me
+            user-name-attribute: response
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+
+# ===== 모니터링 설정 (kyj-lib-core 포함) =====
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    readinessstate:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# ===== AWS S3 설정 (kyj-lib-core-file) =====
+s3:
+  credentials:
+    access-key: ${S3_ACCESS}
+    secret-key: ${S3_SECRET}
+    region: ap-northeast-2
+    bucket: ${S3_BUCKET}
+
+# ===== KYJ 모듈 설정 =====
+kyj:
+  security:
+    auth:
+      enabled: true  # 인증 서버 모듈 활성화 (기본값: true)
+      token:
+        secret: ${JWT_SECRET}
+        access-token-expiry: 3600000      # 1시간
+        refresh-token-expiry: 86400000    # 24시간
+      oauth2:
+        success-redirect-url: ${OAUTH2_SUCCESS_REDIRECT_URL}
+        failure-redirect-url: ${OAUTH2_SUCCESS_FAILURE_URL}
+        logout-redirect-url: ${OAUTH2_SUCCESS_LOGOUT_URL}
+    client:
+      enabled: true # 클라이언트 모듈 활성화 (기본값: true)
+      use-api-gateway: false  # true: API Gateway, false: JWT
+      enable-blacklist: true
+      api-gateway:
+        user-id-header: "X-User-Id"
+        username-header: "X-Username"
+        email-header: "X-Email"
+        roles-header: "X-Roles"
+        token-header: "X-Token"
+      static-public-endpoints:
+        - /actuator
+        - /health
+        - /favicon.ico
+        - /error
+        - /api/public
+        - /docs
+        - /oauth2/**
+        - /login/**
+        - /actuator/**
+
+
+# ===== 로깅 설정 =====
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type: trace
+
+
