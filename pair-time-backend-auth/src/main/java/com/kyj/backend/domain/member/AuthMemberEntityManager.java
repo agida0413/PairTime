@@ -28,6 +28,7 @@ public class AuthMemberEntityManager {
               .profile(paramAuthMemberDTO.getProfile())
               .role("ROLE_USER")
               .username(paramAuthMemberDTO.getUsername())
+                      
               .build());
     }
 }

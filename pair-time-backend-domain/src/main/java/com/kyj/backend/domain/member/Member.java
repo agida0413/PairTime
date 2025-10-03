@@ -127,13 +127,14 @@ public class Member extends BaseEntity {
         this.email = builder.email;
         this.profile = builder.profile;
         this.role = builder.role;
+        this.nickname = builder.nickname;
     }
 
     static class Builder {
         private String username;
         private String email;
         private String profile;
-        private String nickaname;
+        private String nickname;
         private String role = "ROLE_USER";
 
         Builder() {}
@@ -157,8 +158,8 @@ public class Member extends BaseEntity {
             this.role = role;
             return this;
         }
-        Builder nickname(String nickaname){
-            this.nickaname = nickaname;
+        Builder nickname(String nickname){
+            this.nickname = nickname;
             return this;
         }
 
