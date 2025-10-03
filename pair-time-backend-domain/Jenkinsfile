@@ -8,6 +8,8 @@ pipeline {
         ARTIFACT_ID = 'pair-time-backend-domain'
         GROUP_ID = 'com.kyj'
         VERSION = '0.0.1-SNAPSHOT'
+        // 프로젝트 루트 디렉토리 설정
+        PROJECT_ROOT = "${WORKSPACE}"
     }
 
     stages {
@@ -21,39 +23,50 @@ pipeline {
         stage('Environment Info') {
             steps {
                 echo '========== Environment Information =========='
-                sh '''
-                    echo "Java Version:"
-                    java -version
-                    echo "Gradle Version:"
-                    ./gradlew --version
-                    echo "Current Directory:"
-                    pwd
-                    ls -la
-                '''
+                dir("${PROJECT_ROOT}") {
+                    sh '''
+                        echo "Java Version:"
+                        java -version
+                        echo "Current Directory:"
+                        pwd
+                        ls -la
+                        echo "Checking gradlew location:"
+                        ls -la gradlew || echo "gradlew not found in current directory"
+                        echo "Gradle Version:"
+                        chmod +x gradlew
+                        ./gradlew --version
+                    '''
+                }
             }
         }
 
         stage('Clean') {
             steps {
                 echo '========== Cleaning previous builds =========='
-                sh '''
-                    chmod +x gradlew
-                    ./gradlew :${MODULE_PATH}:clean
-                '''
+                dir("${PROJECT_ROOT}") {
+                    sh '''
+                        chmod +x gradlew
+                        ./gradlew :${MODULE_PATH}:clean
+                    '''
+                }
             }
         }
 
         stage('Build') {
             steps {
                 echo '========== Building Domain Module =========='
-                sh './gradlew :${MODULE_PATH}:build -x test --info'
+                dir("${PROJECT_ROOT}") {
+                    sh './gradlew :${MODULE_PATH}:build -x test --info'
+                }
             }
         }
 
         stage('Test') {
             steps {
                 echo '========== Running Tests =========='
-                sh './gradlew :${MODULE_PATH}:test'
+                dir("${PROJECT_ROOT}") {
+                    sh './gradlew :${MODULE_PATH}:test'
+                }
             }
             post {
                 always {
@@ -73,7 +86,9 @@ pipeline {
         stage('Publish to Nexus') {
             steps {
                 echo '========== Publishing to Nexus =========='
-                sh './gradlew :${MODULE_PATH}:publish --info'
+                dir("${PROJECT_ROOT}") {
+                    sh './gradlew :${MODULE_PATH}:publish --info'
+                }
             }
         }
 
