@@ -10,6 +10,7 @@ import com.kyj.core.security.auth.service.AuthMemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 2025-10-03
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class CustomAuthMemberService implements AuthMemberService {
 
     private final MemberRepository memberRepository;
@@ -31,8 +33,19 @@ public class CustomAuthMemberService implements AuthMemberService {
      * @return
      */
     @Override
+    @Transactional
     public AuthMemberDTO findOrCreateMember(OAuth2Response oAuth2Response) {
-      String username =   oAuth2Response.getProviderId() + "_" + oAuth2Response.getEmail();
+
+        String username =   oAuth2Response.getProviderId() + "_" + oAuth2Response.getEmail();
+
+        AuthMemberDTO paramAuthMemberDTO = AuthMemberDTO.builder()
+                    .username(username)
+                    .email(oAuth2Response.getEmail())
+                    .role("ROLE_USER")
+                    .provider(oAuth2Response.getProvider())
+                    .providerId(oAuth2Response.getProviderId())
+                    .active(true)
+                    .build();
 
         Member member = memberRepository.findByUsername(username)
                 .orElseGet(() -> {
@@ -41,7 +54,6 @@ public class CustomAuthMemberService implements AuthMemberService {
                 });
 
         if(member == null){
-            member = new Member();
 
         }
 
