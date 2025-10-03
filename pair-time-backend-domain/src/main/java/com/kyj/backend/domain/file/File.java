@@ -17,7 +17,6 @@ import jakarta.validation.constraints.NotNull;
         })
 })
 @Getter
-@Setter
 public class File extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,6 +45,22 @@ public class File extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "obj_id")
     private PlanPost planPost;
+
+    void setFileType(FileType fileType) {
+        this.fileType = fileType;
+    }
+
+    void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
+
+    void setFilename(String filename) {
+        this.filename = filename;
+    }
+
+    void setPriority(int priority) {
+        this.priority = priority;
+    }
 
     private File(Builder builder) {
         this.fileType = builder.fileType;

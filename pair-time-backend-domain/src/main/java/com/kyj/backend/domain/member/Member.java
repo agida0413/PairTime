@@ -100,6 +100,22 @@ public class Member extends BaseEntity {
         planReview.setMember(null);
     }
 
+    void setUsername(String username) {
+        this.username = username;
+    }
+
+    void setEmail(String email) {
+        this.email = email;
+    }
+
+    void setProfile(String profile) {
+        this.profile = profile;
+    }
+
+    void setRole(String role) {
+        this.role = role;
+    }
+
     private Member(Builder builder) {
         this.username = builder.username;
         this.email = builder.email;

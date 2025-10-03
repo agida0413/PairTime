@@ -34,6 +34,14 @@ public class PlanExpD extends BaseEntity {
     private PlanExp planExp;
 
 
+    void setExpenditure(BigDecimal expenditure) {
+        this.expenditure = expenditure;
+    }
+
+    void setTitle(String title) {
+        this.title = title;
+    }
+
     public void setPlanExp(PlanExp planExp){
         this.planExp = planExp;
     }

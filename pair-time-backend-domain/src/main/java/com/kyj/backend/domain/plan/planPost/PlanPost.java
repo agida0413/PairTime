@@ -37,6 +37,13 @@ public class PlanPost extends BaseEntity {
     @JoinColumn(name = "plan_id")
     private PlanM planM;
 
+    void setTitle(String title) {
+        this.title = title;
+    }
+
+    void setContent(String content) {
+        this.content = content;
+    }
 
     public void setPlanM(PlanM planM){
         this.planM = planM;

@@ -65,6 +65,22 @@ public class PlanGrp extends BaseEntity {
         planM.setPlanGrp(null);
     }
 
+    void setUserId1(Long userId1) {
+        this.userId1 = userId1;
+    }
+
+    void setUserId2(Long userId2) {
+        this.userId2 = userId2;
+    }
+
+    void setLoveStartAt(LocalDate loveStartAt) {
+        this.loveStartAt = loveStartAt;
+    }
+
+    void setPlanGrpTemp(PlanGrpTemp planGrpTemp) {
+        this.planGrpTemp = planGrpTemp;
+    }
+
     private PlanGrp(Builder builder) {
         this.userId1 = builder.userId1;
         this.userId2 = builder.userId2;
