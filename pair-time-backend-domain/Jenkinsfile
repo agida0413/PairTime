@@ -1,0 +1,124 @@
+pipeline {
+    agent any
+
+    environment {
+        NEXUS_URL = 'http://192.168.56.1:9090'
+        NEXUS_REPOSITORY = 'kyj-lib-core'
+        MODULE_PATH = 'pair-time-backend-domain'
+        ARTIFACT_ID = 'pair-time-backend-domain'
+        GROUP_ID = 'com.kyj'
+        VERSION = '0.0.1-SNAPSHOT'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '========== Checking out code =========='
+                checkout scm
+            }
+        }
+
+        stage('Environment Info') {
+            steps {
+                echo '========== Environment Information =========='
+                sh '''
+                    echo "Java Version:"
+                    java -version
+                    echo "Gradle Version:"
+                    ./gradlew --version
+                    echo "Current Directory:"
+                    pwd
+                    ls -la
+                '''
+            }
+        }
+
+        stage('Clean') {
+            steps {
+                echo '========== Cleaning previous builds =========='
+                sh '''
+                    chmod +x gradlew
+                    ./gradlew :${MODULE_PATH}:clean
+                '''
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo '========== Building Domain Module =========='
+                sh './gradlew :${MODULE_PATH}:build -x test --info'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo '========== Running Tests =========='
+                sh './gradlew :${MODULE_PATH}:test'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: '**/build/test-results/test/*.xml'
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: false,
+                        keepAll: true,
+                        reportDir: "${MODULE_PATH}/build/reports/tests/test",
+                        reportFiles: 'index.html',
+                        reportName: 'Test Report'
+                    ])
+                }
+            }
+        }
+
+        stage('Publish to Nexus') {
+            steps {
+                echo '========== Publishing to Nexus =========='
+                sh './gradlew :${MODULE_PATH}:publish --info'
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                echo '========== Verifying Deployment =========='
+                script {
+                    echo "Artifact: ${GROUP_ID}:${ARTIFACT_ID}:${VERSION}"
+                    echo "Repository: ${NEXUS_URL}/repository/${NEXUS_REPOSITORY}/"
+
+                    // Nexus에 배포된 아티팩트 확인
+                    sh '''
+                        echo "Checking artifact in Nexus..."
+                        ARTIFACT_PATH="${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}"
+                        ARTIFACT_URL="${NEXUS_URL}/repository/${NEXUS_REPOSITORY}/${ARTIFACT_PATH}/${ARTIFACT_ID}-${VERSION}.jar"
+                        echo "Artifact URL: ${ARTIFACT_URL}"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '========================================='
+            echo '✅ Domain module successfully published!'
+            echo "📦 Artifact: ${GROUP_ID}:${ARTIFACT_ID}:${VERSION}"
+            echo "🚀 Repository: ${NEXUS_URL}/repository/${NEXUS_REPOSITORY}/"
+            echo '========================================='
+        }
+        failure {
+            echo '========================================='
+            echo '❌ Build or publish failed!'
+            echo '========================================='
+        }
+        always {
+            echo '========== Cleaning Workspace =========='
+            cleanWs(
+                deleteDirs: true,
+                disableDeferredWipeout: true,
+                patterns: [
+                    [pattern: '**/build/**', type: 'INCLUDE'],
+                    [pattern: '**/.gradle/**', type: 'INCLUDE']
+                ]
+            )
+        }
+    }
+}
