@@ -1,7 +1,6 @@
 package com.kyj.backend.domain.member;
 
 import com.kyj.core.security.auth.dto.AuthMemberDTO;
-import com.kyj.core.security.auth.dto.oauth2.OAuth2Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -15,7 +14,7 @@ import java.util.Optional;
  * (다른 패키지는 세터 불가)
  */
 @Slf4j
-public class AuthMemberEntityManager {
+public class AuthMemberEntityFactory {
     /**
      * 새로운 아이디 인서트를 위한 메소드
      * @param paramAuthMemberDTO
@@ -29,13 +28,18 @@ public class AuthMemberEntityManager {
               .role("ROLE_USER")
               .username(paramAuthMemberDTO.getUsername())
               .nickname(paramAuthMemberDTO.getNickname())
+              .provider(paramAuthMemberDTO.getProvider())
               .build());
     }
 
-
-    public static void updateLoginInfo(Member member,AuthMemberDTO paramAuthMemberDTO){
-        member.setNickname(paramAuthMemberDTO.getNickname());
-        member.setProfile(paramAuthMemberDTO.getProfile());
-        member.setUsername(paramAuthMemberDTO.getUsername());
-    }
+//    /**
+//     * 회원정보 수정
+//     * @param member
+//     * @param paramAuthMemberDTO
+//     */
+//    public static void updateLoginInfo(Member member,AuthMemberDTO paramAuthMemberDTO){
+//        member.setNickname(paramAuthMemberDTO.getNickname());
+//        member.setProfile(paramAuthMemberDTO.getProfile());
+//        member.setUsername(paramAuthMemberDTO.getUsername());
+//    }
 }

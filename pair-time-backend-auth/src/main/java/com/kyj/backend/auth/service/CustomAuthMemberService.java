@@ -2,13 +2,15 @@ package com.kyj.backend.auth.service;
 
 import com.kyj.backend.auth.mapper.MemberEntityDTOMapper;
 import com.kyj.backend.auth.repository.MemberRepository;
-import com.kyj.backend.domain.member.AuthMemberEntityManager;
+import com.kyj.backend.domain.member.AuthMemberEntityFactory;
+
 import com.kyj.backend.domain.member.Member;
 import com.kyj.core.api.CmErrCode;
 import com.kyj.core.exception.custom.KyjBizException;
 import com.kyj.core.security.auth.dto.AuthMemberDTO;
 import com.kyj.core.security.auth.dto.oauth2.OAuth2Response;
 import com.kyj.core.security.auth.service.AuthMemberService;
+import com.kyj.core.security.client.exception.SecurityErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,7 +51,7 @@ public class CustomAuthMemberService implements AuthMemberService {
 
         String username =   oAuth2Response.getProviderId() + "_" + oAuth2Response.getEmail();
 
-
+        log.info("찾는 회원 ={}",username);
         Member member = memberRepository.findByUsername(username)
                 .orElseGet(() -> {
                     log.warn("사용자가 존재하지 않음 - username: {}", username);
@@ -66,13 +68,14 @@ public class CustomAuthMemberService implements AuthMemberService {
                 .active(true)
                 .profile(oAuth2Response.getProfile())
                 .nickname(oAuth2Response.getNickname())
+                .provider(oAuth2Response.getProvider())
                 .build();
 
         AuthMemberDTO returnAuthMemberDTO =null;
 
         if(member == null){
             //회원가입 엔티티 생성(DDD)
-            Optional<Member> optionalJoinMember = AuthMemberEntityManager.createJoinMember(paramAuthMemberDTO);
+            Optional<Member> optionalJoinMember = AuthMemberEntityFactory.createJoinMember(paramAuthMemberDTO);
 
             if(optionalJoinMember.isPresent()){
                 Member joinMember =  optionalJoinMember.get();
@@ -84,6 +87,8 @@ public class CustomAuthMemberService implements AuthMemberService {
                 return null;
             }
 
+        }else{
+            returnAuthMemberDTO = memberEntityDTOMapper.toAuthMemberDTO(member);
         }
 
         log.info("회원가입 완료 = {}",returnAuthMemberDTO.getUsername());
@@ -131,6 +136,17 @@ public class CustomAuthMemberService implements AuthMemberService {
      */
     @Override
     public void updateMemberLoginInfo(AuthMemberDTO memberDTO) {
-        AuthMemberService.super.updateMemberLoginInfo(memberDTO);
+        memberRepository.findById(memberDTO.getUserId()).ifPresentOrElse(
+                findMember ->{
+                    AuthMemberEntityFactory.updateLoginInfo(findMember,memberDTO);
+                    log.info("updateMemberLoginInfo , 업데이트 회원 = {}",findMember.getUsername());
+                },
+                ()->{
+                    log.error("updateMemberLoginInfo수행 중 엔티티를 찾을 수 없음");
+                    throw new KyjBizException(CmErrCode.CM002);
+                }
+        );
     }
+
+
 }
