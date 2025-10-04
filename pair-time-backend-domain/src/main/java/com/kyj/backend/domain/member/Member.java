@@ -48,8 +48,11 @@ public class Member extends BaseEntity {
     @OneToMany(mappedBy = "member",cascade = CascadeType.ALL)
     private List<PlanM> planMList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "member",cascade = CascadeType.ALL,orphanRemoval = true)
-    private List<PlanGrpTemp> planGrpTempList = new ArrayList<>();
+    @OneToMany(mappedBy = "sender",cascade = CascadeType.ALL)
+    private List<PlanGrpTemp> planGrpTempListByMe = new ArrayList<>();
+
+    @OneToMany(mappedBy = "receiver",cascade = CascadeType.ALL)
+    private List<PlanGrpTemp> planGrpTempListByOther = new ArrayList<>();
 
     @OneToMany(mappedBy = "member",cascade = CascadeType.ALL)
     private List<PlanReview> planReviewList = new ArrayList<>();
@@ -57,18 +60,28 @@ public class Member extends BaseEntity {
      * 연관관계 편의메소드
      * @param planGrpTemp
      */
-    public void addPlanGrpTemp(PlanGrpTemp planGrpTemp){
-        this.planGrpTempList.add(planGrpTemp);
-        planGrpTemp.setMember(this);
+    public void addPlanGrpTempByMeList(PlanGrpTemp planGrpTemp){
+        this.planGrpTempListByMe.add(planGrpTemp);
+        planGrpTemp.setSender(this);
+    }
+
+    public void addPlanGrpTempByOtherList(PlanGrpTemp planGrpTemp){
+        this.planGrpTempListByOther.add(planGrpTemp);
+        planGrpTemp.setReceiver(this);
     }
 
     /**
      * 연관관계 편의메소드
      * @param planGrpTemp
      */
-    public void removePlanGrpTemp(PlanGrpTemp planGrpTemp){
-        this.planGrpTempList.remove(planGrpTemp);
-        planGrpTemp.setMember(null);
+    public void removePlanGrpTempByMeList(PlanGrpTemp planGrpTemp){
+        this.planGrpTempListByMe.remove(planGrpTemp);
+        planGrpTemp.setSender(null);
+    }
+
+    public void removePlanGrpTempByOtherList(PlanGrpTemp planGrpTemp){
+        this.planGrpTempListByOther.remove(planGrpTemp);
+        planGrpTemp.setReceiver(null);
     }
 
     /**

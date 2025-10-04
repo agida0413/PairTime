@@ -1,8 +1,8 @@
-package com.kyj.backend.auth.service;
+package com.kyj.backend.auth.service.member;
 
-import com.kyj.backend.auth.AuthErrCode;
+import com.kyj.backend.auth.constants.AuthErrCode;
 import com.kyj.backend.auth.mapper.MemberEntityDTOMapper;
-import com.kyj.backend.auth.repository.MemberRepository;
+import com.kyj.backend.auth.repository.member.MemberRepository;
 import com.kyj.backend.domain.member.AuthMemberEntityFactory;
 
 import com.kyj.backend.domain.member.Member;
@@ -11,7 +11,6 @@ import com.kyj.core.exception.custom.KyjBizException;
 import com.kyj.core.security.auth.dto.AuthMemberDTO;
 import com.kyj.core.security.auth.dto.oauth2.OAuth2Response;
 import com.kyj.core.security.auth.service.AuthMemberService;
-import com.kyj.core.security.client.exception.SecurityErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
