@@ -31,4 +31,11 @@ public class AuthMemberEntityManager {
               .nickname(paramAuthMemberDTO.getNickname())
               .build());
     }
+
+
+    public static void updateLoginInfo(Member member,AuthMemberDTO paramAuthMemberDTO){
+        member.setNickname(paramAuthMemberDTO.getNickname());
+        member.setProfile(paramAuthMemberDTO.getProfile());
+        member.setUsername(paramAuthMemberDTO.getUsername());
+    }
 }

@@ -91,9 +91,8 @@ spring:
             redirect-uri: http://localhost:8080/login/oauth2/code/google
             authorization-grant-type: authorization_code
             scope:
+              - profile
               - email
-              - name
-              - picture
           kakao:
             client-name: kakao
             client-id: ${KAKAO_CLIENT_ID}
@@ -102,8 +101,8 @@ spring:
             authorization-grant-type: authorization_code
             scope:
               - account_email
-              - nickname
-              - profile_image_url
+              - profile_nickname
+              - profile_image
         provider:
           naver:
             authorization-uri: https://nid.naver.com/oauth2.0/authorize
