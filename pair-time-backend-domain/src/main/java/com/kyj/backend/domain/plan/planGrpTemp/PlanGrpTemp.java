@@ -22,11 +22,9 @@ public class PlanGrpTemp extends BaseEntity {
     private Long id;
 
     @Column(name = "link",length = 300,nullable = true)
-    @NotNull
     private String link;
 
     @Column(name="receive_email",nullable = true,length = 100)
-    @NotNull
     private String receiveEmail;
 
     @Column(name = "is_created" ,nullable = false, length = 1)
