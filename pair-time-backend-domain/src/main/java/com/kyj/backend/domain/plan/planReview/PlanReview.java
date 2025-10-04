@@ -3,14 +3,17 @@ package com.kyj.backend.domain.plan.planReview;
 import com.kyj.backend.domain.member.Member;
 import com.kyj.backend.domain.plan.planM.PlanM;
 import com.kyj.core.jpa.entity.BaseEntity;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import jakarta.persistence.*;
 
+/**
+ * 계획에 대한 평점(리뷰) 엔티티
+ */
 @Entity
 @Table(name = "PLAN_REVIEW")
 @Getter
@@ -25,12 +28,14 @@ public class PlanReview extends BaseEntity {
     private BigDecimal rating;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plan_id")
+    @JoinColumn(name = "plan_id",nullable = false)
+    @NotNull
     private PlanM planM;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private Member member;
+    @JoinColumn(name = "reviewer_id",nullable = false)
+    @NotNull
+    private Member reviewer;
 
 
     void setRating(BigDecimal rating) {
@@ -42,19 +47,19 @@ public class PlanReview extends BaseEntity {
     }
 
     public void setMember(Member member){
-        this.member = member;
+        this.reviewer = member;
     }
 
     private PlanReview(Builder builder) {
         this.rating = builder.rating;
         this.planM = builder.planM;
-        this.member = builder.member;
+        this.reviewer = builder.reviewer;
     }
 
     static class Builder {
         private BigDecimal rating;
         private PlanM planM;
-        private Member member;
+        private Member reviewer;
 
         Builder() {}
 
@@ -68,8 +73,8 @@ public class PlanReview extends BaseEntity {
             return this;
         }
 
-        Builder member(Member member) {
-            this.member = member;
+        Builder reviewer(Member member) {
+            this.reviewer = member;
             return this;
         }
 

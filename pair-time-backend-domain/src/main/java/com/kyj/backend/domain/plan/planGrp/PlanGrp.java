@@ -14,6 +14,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 그룹 마스터
+ */
 @Entity
 @Getter
 @Table(name = "PLAN_GRP")

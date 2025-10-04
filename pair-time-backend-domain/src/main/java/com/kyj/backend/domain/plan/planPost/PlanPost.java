@@ -7,12 +7,15 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+
 
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.*;
 
+/**
+ * 계획(일정) 에 대한 게시물 엔티티
+ */
 @Entity
 @Table(name = "PLAN_POST")
 @Getter
@@ -34,7 +37,8 @@ public class PlanPost extends BaseEntity {
     private List<File> files = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plan_id")
+    @JoinColumn(name = "plan_id",nullable = false)
+    @NotNull
     private PlanM planM;
 
     void setTitle(String title) {

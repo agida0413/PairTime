@@ -11,6 +11,9 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
+/**
+ * 일정에 대한 지출 상세 엔티티
+ */
 @Entity
 @Table(name = "PLAN_EXP_D")
 @Getter
@@ -30,7 +33,8 @@ public class PlanExpD extends BaseEntity {
     private String title;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plan_exp_id")
+    @JoinColumn(name = "plan_exp_id",nullable = false)
+    @NotNull
     private PlanExp planExp;
 
 
