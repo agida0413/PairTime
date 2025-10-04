@@ -3,6 +3,7 @@ package com.kyj.backend.domain.member;
 import com.kyj.backend.domain.plan.plaGrpMember.PlanGrpMember;
 import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 import com.kyj.backend.domain.plan.planM.PlanM;
+import com.kyj.backend.domain.plan.planParticipant.PlanParticipant;
 import com.kyj.backend.domain.plan.planReview.PlanReview;
 import com.kyj.core.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -15,6 +16,9 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 회원 엔티티
+ */
 @Entity
 @Table(name = "MEMBER")
 @Getter
@@ -46,8 +50,7 @@ public class Member extends BaseEntity {
     @NotNull //따로 DDL문 작성
     private String role = "ROLE_USER";
 
-    @OneToMany(mappedBy = "member",cascade = CascadeType.ALL)
-    private List<PlanM> planMList = new ArrayList<>();
+
 
     @OneToMany(mappedBy = "sender",cascade = CascadeType.ALL)
     private List<PlanGrpTemp> planGrpTempListByMe = new ArrayList<>();
@@ -55,11 +58,14 @@ public class Member extends BaseEntity {
     @OneToMany(mappedBy = "receiver",cascade = CascadeType.ALL)
     private List<PlanGrpTemp> planGrpTempListByOther = new ArrayList<>();
 
-    @OneToMany(mappedBy = "member",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "reviewer",cascade = CascadeType.ALL)
     private List<PlanReview> planReviewList = new ArrayList<>();
 
     @OneToMany(mappedBy = "member",cascade = CascadeType.ALL)
     private List<PlanGrpMember> planGrpMembers  = new ArrayList<>();
+
+    @OneToMany(mappedBy = "participant")
+    private List<PlanParticipant> participatedList = new ArrayList<>();
     /**
      * 연관관계 편의메소드
      * @param planGrpTemp
@@ -79,6 +85,10 @@ public class Member extends BaseEntity {
         planGrpMember.setMember(this);
     }
 
+    public void addParticipate(PlanParticipant planParticipant){
+        this.participatedList.add(planParticipant);
+        planParticipant.setParticipant(this);
+    }
     /**
      * 연관관계 편의메소드
      * @param planGrpTemp
@@ -92,24 +102,11 @@ public class Member extends BaseEntity {
         this.planGrpTempListByOther.remove(planGrpTemp);
         planGrpTemp.setReceiver(null);
     }
-
-    /**
-     * 연관관계 편의메소드
-     * @param planM
-     */
-    public void addPlanM(PlanM planM){
-        this.planMList.add(planM);
-        planM.setMember(this);
+    public void removeParticipate(PlanParticipant planParticipant){
+        this.participatedList.remove(planParticipant);
+        planParticipant.setParticipant(null);
     }
 
-    /**
-     * 연관관계 편의메소드
-     * @param planM
-     */
-    public void removePlanM(PlanM planM){
-        this.planMList.remove(planM);
-        planM.setMember(null);
-    }
 
     /**
      * 연관관계 편의메소드

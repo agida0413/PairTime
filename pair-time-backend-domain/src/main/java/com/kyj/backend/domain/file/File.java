@@ -43,7 +43,8 @@ public class File extends BaseEntity {
     private int priority;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "obj_id")
+    @JoinColumn(name = "obj_id",nullable = false)
+    @NotNull
     private PlanPost planPost;
 
     void setFileType(FileType fileType) {

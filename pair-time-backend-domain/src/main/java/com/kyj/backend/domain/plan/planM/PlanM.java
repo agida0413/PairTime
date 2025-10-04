@@ -3,6 +3,7 @@ package com.kyj.backend.domain.plan.planM;
 import com.kyj.backend.domain.member.Member;
 import com.kyj.backend.domain.plan.planExp.PlanExp;
 import com.kyj.backend.domain.plan.planGrp.PlanGrp;
+import com.kyj.backend.domain.plan.planParticipant.PlanParticipant;
 import com.kyj.backend.domain.plan.planPost.PlanPost;
 import com.kyj.backend.domain.plan.planReview.PlanReview;
 import com.kyj.core.jpa.entity.BaseEntity;
@@ -16,7 +17,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;import jakarta.persistence.*;
 
-
+/**
+ * 계획 마스터
+ */
 @Entity
 @Table(name = "PLAN_M")
 @Getter
@@ -68,7 +71,8 @@ public class PlanM extends BaseEntity {
     private String startYmd;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plan_grp_id")
+    @JoinColumn(name = "plan_grp_id",nullable = false)
+    @NotNull
     private PlanGrp planGrp;
 
     @OneToMany(mappedBy = "planM",cascade = CascadeType.ALL,orphanRemoval = true)
@@ -80,9 +84,10 @@ public class PlanM extends BaseEntity {
     @OneToMany(mappedBy = "planM",cascade = CascadeType.ALL)
     private List<PlanReview> planReviewList = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private Member member;
+    @OneToMany(mappedBy = "planM",cascade = CascadeType.ALL , orphanRemoval = true)
+    private List<PlanParticipant> planParticipants = new ArrayList<>();
+
+
 
 
     void setTitle(String title) {
@@ -113,13 +118,13 @@ public class PlanM extends BaseEntity {
         this.planType = planType;
     }
 
+
+
     public void setPlanGrp(PlanGrp planGrp){
         this.planGrp = planGrp;
     }
 
-    public void setMember(Member member){
-        this.member = member;
-    }
+
     /**
      * 연관관계 편의 메소드
      * @param planPost
@@ -173,6 +178,17 @@ public class PlanM extends BaseEntity {
         planReview.setPlanM(null);
     }
 
+
+    public void addPlanParticipant(PlanParticipant planParticipant){
+        this.planParticipants.add(planParticipant);
+        planParticipant.setPlanM(this);
+    }
+
+    public void removePlanParticipant(PlanParticipant planParticipant){
+        this.planParticipants.remove(planParticipant);
+        planParticipant.setPlanM(null);
+    }
+
     private PlanM(Builder builder) {
         this.title = builder.title;
         this.content = builder.content;
@@ -182,7 +198,6 @@ public class PlanM extends BaseEntity {
         this.delYn = builder.delYn;
         this.planType = builder.planType;
         this.planGrp = builder.planGrp;
-        this.member = builder.member;
     }
 
     static class Builder {
@@ -194,7 +209,6 @@ public class PlanM extends BaseEntity {
         private String delYn = "N";
         private PlanType planType;
         private PlanGrp planGrp;
-        private Member member;
 
         Builder() {}
 
@@ -238,10 +252,6 @@ public class PlanM extends BaseEntity {
             return this;
         }
 
-        Builder member(Member member) {
-            this.member = member;
-            return this;
-        }
 
         PlanM build() {
             return new PlanM(this);

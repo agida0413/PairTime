@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import jakarta.persistence.*;
 
+/**
+ * 그룹 임시생성 엔티티(초대)
+ */
 @Entity
 @Table(name = "PLAN_GRP_TEMP")
 @Getter
@@ -36,12 +39,13 @@ public class PlanGrpTemp extends BaseEntity {
     private PlanGrp planGrp;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
+    @JoinColumn(name = "sender_id",nullable = false)
+    @NotNull
     private Member sender;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id")
+    @JoinColumn(name = "receiver_id",nullable = true)
     private Member receiver;
 
     void setLink(String link) {

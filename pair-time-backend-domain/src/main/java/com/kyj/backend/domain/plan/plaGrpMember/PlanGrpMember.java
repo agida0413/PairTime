@@ -2,20 +2,26 @@ package com.kyj.backend.domain.plan.plaGrpMember;
 
 import com.kyj.backend.domain.member.Member;
 import com.kyj.backend.domain.plan.planGrp.PlanGrp;
-import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
+
 import com.kyj.core.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
+/**
+ * 계획 그룹 참여자 엔티티
+ */
 @Entity
 @Getter
 @Setter
-@Table(name = "PLAN_GRP_MEMBER")
+@Table(name = "PLAN_GRP_MEMBER",
+        uniqueConstraints = @UniqueConstraint(
+                name = "UK_PLAN_GRP_MEMBER",
+                columnNames = {"plan_grp_id", "user_id"}
+        ))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlanGrpMember extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,11 +29,13 @@ public class PlanGrpMember extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plan_grp_id")
+    @JoinColumn(name = "plan_grp_id",nullable = false)
+    @NotNull
     private PlanGrp planGrp;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id",nullable = false)
+    @NotNull
     private Member member;
 
 
