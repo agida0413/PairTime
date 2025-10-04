@@ -128,6 +128,24 @@ public class Member extends BaseEntity {
         this.provider = provider;
     }
 
+
+    /**
+     * 회원로그인 성공시 정보변경
+     * @param nickname
+     * @param profile
+     * @param username
+     */
+    public void updateLoginInfo(String nickname,String profile,String username){
+        this.nickname = nickname;
+        this.profile = profile;
+        this.username = username;
+    }
+
+
+
+    // -------------------------private Builder-------------------
+
+
     private Member(Builder builder) {
         this.username = builder.username;
         this.email = builder.email;
