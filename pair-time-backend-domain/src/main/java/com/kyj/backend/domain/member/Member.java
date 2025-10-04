@@ -32,8 +32,11 @@ public class Member extends BaseEntity {
     @NotNull
     private String email;
 
-    @Column(name="profile",length = 150 )
+    @Column(name="profile",length = 300 )
     private String profile;
+    @Column(name = "provider",length = 50,nullable = false)
+    @NotNull
+    private String provider;
 
     @Column(name="nickname",length = 300 , nullable = false)
     @NotNull
@@ -121,6 +124,9 @@ public class Member extends BaseEntity {
     void setNickname(String nickname){
         this.nickname = nickname;
     }
+    void setProvider(String provider){
+        this.provider = provider;
+    }
 
     private Member(Builder builder) {
         this.username = builder.username;
@@ -128,6 +134,8 @@ public class Member extends BaseEntity {
         this.profile = builder.profile;
         this.role = builder.role;
         this.nickname = builder.nickname;
+        this.provider = builder.provider;
+
     }
 
     static class Builder {
@@ -135,7 +143,9 @@ public class Member extends BaseEntity {
         private String email;
         private String profile;
         private String nickname;
+        private String provider;
         private String role = "ROLE_USER";
+
 
         Builder() {}
 
@@ -162,7 +172,10 @@ public class Member extends BaseEntity {
             this.nickname = nickname;
             return this;
         }
-
+        Builder provider(String provider){
+            this.provider = provider;
+            return this;
+        }
         Member build() {
             return new Member(this);
         }
