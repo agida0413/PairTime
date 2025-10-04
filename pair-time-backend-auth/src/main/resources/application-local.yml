@@ -152,7 +152,7 @@ kyj:
       enabled: true  # 인증 서버 모듈 활성화 (기본값: true)
       token:
         secret: asdasdsadasdassdasdsadxxadasdasdsadsadads
-        access-token-expiry: 3600000      # 1시간
+        access-token-expiry: 86400000      # 24시간(로컬)
         refresh-token-expiry: 86400000    # 24시간
       oauth2:
         success-redirect-url: http://localhost:3000/auth/success
@@ -183,7 +183,9 @@ kyj:
 # ===== 로깅 설정 =====
 logging:
   level:
+    com.kyj.backend.auth: DEBUG
     org.hibernate.SQL: debug
     org.hibernate.type: trace
+    org.hibernate.orm.jdbc.bind: TRACE
 
 

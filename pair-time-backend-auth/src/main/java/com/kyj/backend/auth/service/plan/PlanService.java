@@ -1,4 +1,4 @@
-package com.kyj.backend.auth.service.planGrp;
+package com.kyj.backend.auth.service.plan;
 
 import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
 
@@ -8,7 +8,7 @@ import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
  * Auth 서버에서 회원의 일정관리 그룹을 관리하고 CRUD하는 서비스
  *
  */
-public interface PlanGrpService {
+public interface PlanService {
 
     public MainUITypeResponse determineMainUIType(Long userId);
 }
