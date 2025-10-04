@@ -1,5 +1,6 @@
 package com.kyj.backend.domain.member;
 
+import com.kyj.backend.domain.plan.plaGrpMember.PlanGrpMember;
 import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 import com.kyj.backend.domain.plan.planM.PlanM;
 import com.kyj.backend.domain.plan.planReview.PlanReview;
@@ -56,6 +57,9 @@ public class Member extends BaseEntity {
 
     @OneToMany(mappedBy = "member",cascade = CascadeType.ALL)
     private List<PlanReview> planReviewList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member",cascade = CascadeType.ALL)
+    private List<PlanGrpMember> planGrpMembers  = new ArrayList<>();
     /**
      * 연관관계 편의메소드
      * @param planGrpTemp
@@ -68,6 +72,11 @@ public class Member extends BaseEntity {
     public void addPlanGrpTempByOtherList(PlanGrpTemp planGrpTemp){
         this.planGrpTempListByOther.add(planGrpTemp);
         planGrpTemp.setReceiver(this);
+    }
+
+    public void addPlanGrpMember(PlanGrpMember planGrpMember){
+        this.planGrpMembers.add(planGrpMember);
+        planGrpMember.setMember(this);
     }
 
     /**

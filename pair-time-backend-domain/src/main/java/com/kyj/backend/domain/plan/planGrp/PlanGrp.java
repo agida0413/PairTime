@@ -1,5 +1,6 @@
 package com.kyj.backend.domain.plan.planGrp;
 
+import com.kyj.backend.domain.plan.plaGrpMember.PlanGrpMember;
 import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 import com.kyj.backend.domain.plan.planM.PlanM;
 import com.kyj.core.jpa.entity.BaseEntity;
@@ -15,11 +16,7 @@ import java.util.List;
 
 @Entity
 @Getter
-@Table(name = "PLAN_GRP",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"user_id_1", "user_id_2"})
-        }
-)
+@Table(name = "PLAN_GRP")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlanGrp extends BaseEntity {
 
@@ -27,13 +24,7 @@ public class PlanGrp extends BaseEntity {
     @Column(name = "plan_grp_id")
     private Long id;
 
-    @Column(name = "user_id_1",nullable = false)
-    @NotNull
-    private Long userId1;
 
-    @Column(name = "user_id_2",nullable = false)
-    @NotNull
-    private Long userId2;
 
     @Column(name="love_start_at",nullable = false)
     @NotNull
@@ -47,6 +38,10 @@ public class PlanGrp extends BaseEntity {
     @OneToMany(mappedBy = "planGrp",cascade = CascadeType.ALL)
     private List<PlanM> planMList = new ArrayList<>();
 
+
+    @OneToMany(mappedBy = "planGrp",cascade = CascadeType.ALL)
+    private List<PlanGrpMember> planGrpMembers = new ArrayList<>();
+
     /**
      * 연관관계 편의메소드
      * @param planM
@@ -56,6 +51,10 @@ public class PlanGrp extends BaseEntity {
         planM.setPlanGrp(this);
     }
 
+    public void addPlanGrpMember(PlanGrpMember planGrpMember ){
+        this.planGrpMembers.add(planGrpMember);
+        planGrpMember.setPlanGrp(this);
+    }
     /**
      * 연관관계 편의메소드
      * @param planM
@@ -65,12 +64,9 @@ public class PlanGrp extends BaseEntity {
         planM.setPlanGrp(null);
     }
 
-    void setUserId1(Long userId1) {
-        this.userId1 = userId1;
-    }
-
-    void setUserId2(Long userId2) {
-        this.userId2 = userId2;
+    public void removePlanGrpMember(PlanGrpMember planGrpMember ){
+        this.planGrpMembers.remove(planGrpMember);
+        planGrpMember.setPlanGrp(null);
     }
 
     void setLoveStartAt(LocalDate loveStartAt) {
@@ -82,29 +78,17 @@ public class PlanGrp extends BaseEntity {
     }
 
     private PlanGrp(Builder builder) {
-        this.userId1 = builder.userId1;
-        this.userId2 = builder.userId2;
         this.loveStartAt = builder.loveStartAt;
         this.planGrpTemp = builder.planGrpTemp;
     }
 
     static class Builder {
-        private Long userId1;
-        private Long userId2;
+
         private LocalDate loveStartAt;
         private PlanGrpTemp planGrpTemp;
 
         Builder() {}
 
-        Builder userId1(Long userId1) {
-            this.userId1 = userId1;
-            return this;
-        }
-
-        Builder userId2(Long userId2) {
-            this.userId2 = userId2;
-            return this;
-        }
 
         Builder loveStartAt(LocalDate loveStartAt) {
             this.loveStartAt = loveStartAt;
