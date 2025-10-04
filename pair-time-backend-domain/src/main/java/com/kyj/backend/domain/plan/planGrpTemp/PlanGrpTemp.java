@@ -21,28 +21,33 @@ public class PlanGrpTemp extends BaseEntity {
     @Column(name = "plan_grp_temp_id")
     private Long id;
 
-    @Column(name = "invite_token",length = 300,nullable = false)
+    @Column(name = "link",length = 300,nullable = true)
     @NotNull
-    private String inviteToken;
+    private String link;
+
+    @Column(name="receive_email",nullable = true,length = 100)
+    @NotNull
+    private String receiveEmail;
 
     @Column(name = "is_created" ,nullable = false, length = 1)
     @NotNull
     private String isCreated = "N";
 
-    @Column(name="receive_email",nullable = false,length = 100)
-    @NotNull
-    private String receiveEmail;
 
     @OneToOne(mappedBy = "planGrpTemp")
     private PlanGrp planGrp;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private Member member;
+    @JoinColumn(name = "sender_id")
+    private Member sender;
 
 
-    void setInviteToken(String inviteToken) {
-        this.inviteToken = inviteToken;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id")
+    private Member receiver;
+
+    void setLink(String link) {
+        this.link = link;
     }
 
     void setIsCreated(String isCreated) {
@@ -53,27 +58,33 @@ public class PlanGrpTemp extends BaseEntity {
         this.receiveEmail = receiveEmail;
     }
 
-    public void setMember(Member member){
-        this.member = member;
+    public void setSender(Member member){
+        this.sender = member;
+    }
+
+    public void setReceiver(Member member){
+        this.receiver = member;
     }
 
     private PlanGrpTemp(Builder builder) {
-        this.inviteToken = builder.inviteToken;
+        this.link = builder.link;
         this.isCreated = builder.isCreated;
         this.receiveEmail = builder.receiveEmail;
-        this.member = builder.member;
+        this.sender = builder.sender;
+        this.receiver = builder.receiver;
     }
 
     static class Builder {
-        private String inviteToken;
+        private String link;
         private String isCreated = "N";
         private String receiveEmail;
-        private Member member;
+        private Member sender;
+        private Member receiver;
 
         Builder() {}
 
-        Builder inviteToken(String inviteToken) {
-            this.inviteToken = inviteToken;
+        Builder link(String link) {
+            this.link = link;
             return this;
         }
 
@@ -87,8 +98,12 @@ public class PlanGrpTemp extends BaseEntity {
             return this;
         }
 
-        Builder member(Member member) {
-            this.member = member;
+        Builder sender(Member member) {
+            this.sender = member;
+            return this;
+        }
+        Builder receiver(Member member) {
+            this.receiver = member;
             return this;
         }
 

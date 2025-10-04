@@ -1,4 +1,4 @@
-package com.kyj.backend.auth;
+package com.kyj.backend.auth.constants;
 
 import com.kyj.core.api.ErrCode;
 import lombok.Getter;
