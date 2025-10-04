@@ -30,15 +30,15 @@ public class PlanGrpServiceImpl implements PlanGrpService{
 
 
 
-        planGrpRepository.findFirstByUserId1OrUserId2(userId,userId)
-                .map(planGrp -> {
-                    log.info("그룹존재[그룹아이디] ={}",planGrp.getId());
-                    return new MainUITypeResponse(MainUIType.CALENDAR);
-                })
-                .orElseGet(()->{
-                    log.info("그룹미존재");
-
-                });
-        return null;
+//        planGrpRepository.findFirstByUserId1OrUserId2(userId,userId)
+//                .map(planGrp -> {
+//                    log.info("그룹존재[그룹아이디] ={}",planGrp.getId());
+//                    return new MainUITypeResponse(MainUIType.CALENDAR);
+//                })
+//                .orElseGet(()->{
+//                    log.info("그룹미존재");
+//
+//                });
+//        return null;
     }
 }

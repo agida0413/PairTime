@@ -19,6 +19,6 @@ public interface PlanGrpRepository extends JpaRepository<PlanGrp,Long> ,PlanGrpQ
      * @param userId2
      * @return
      */
-    Optional<PlanGrp> findFirstByUserId1OrUserId2(Long userId1, Long userId2);
+//    Optional<PlanGrp> findFirstByUserId1OrUserId2(Long userId1, Long userId2);
 
 }
