@@ -1,5 +1,6 @@
 package com.kyj.backend.auth.service;
 
+import com.kyj.backend.auth.AuthErrCode;
 import com.kyj.backend.auth.mapper.MemberEntityDTOMapper;
 import com.kyj.backend.auth.repository.MemberRepository;
 import com.kyj.backend.domain.member.AuthMemberEntityFactory;
@@ -55,6 +56,14 @@ public class CustomAuthMemberService implements AuthMemberService {
         Member member = memberRepository.findByUsername(username)
                 .orElseGet(() -> {
                     log.warn("사용자가 존재하지 않음 - username: {}", username);
+
+                        log.info("이메일 기반 중복회원 체크");
+                        memberRepository.findByEmail(oAuth2Response.getEmail()).ifPresent(
+                                findMemberByEmail ->{
+                                            log.error("이미 사용중인 이메일로 가입 시도 ={}",findMemberByEmail.getEmail());
+                                            throw new KyjBizException(AuthErrCode.AUTH001);
+                                }
+                    );
                     return null;
                 });
 
@@ -138,7 +147,8 @@ public class CustomAuthMemberService implements AuthMemberService {
     public void updateMemberLoginInfo(AuthMemberDTO memberDTO) {
         memberRepository.findById(memberDTO.getUserId()).ifPresentOrElse(
                 findMember ->{
-                    AuthMemberEntityFactory.updateLoginInfo(findMember,memberDTO);
+
+                    findMember.updateLoginInfo(memberDTO.getNickname(),memberDTO.getProfile(),memberDTO.getUsername());
                     log.info("updateMemberLoginInfo , 업데이트 회원 = {}",findMember.getUsername());
                 },
                 ()->{

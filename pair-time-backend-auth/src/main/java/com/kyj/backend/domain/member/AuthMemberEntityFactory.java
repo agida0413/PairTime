@@ -32,14 +32,5 @@ public class AuthMemberEntityFactory {
               .build());
     }
 
-//    /**
-//     * 회원정보 수정
-//     * @param member
-//     * @param paramAuthMemberDTO
-//     */
-//    public static void updateLoginInfo(Member member,AuthMemberDTO paramAuthMemberDTO){
-//        member.setNickname(paramAuthMemberDTO.getNickname());
-//        member.setProfile(paramAuthMemberDTO.getProfile());
-//        member.setUsername(paramAuthMemberDTO.getUsername());
-//    }
+
 }
