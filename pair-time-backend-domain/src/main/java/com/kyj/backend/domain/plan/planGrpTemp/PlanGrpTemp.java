@@ -24,7 +24,7 @@ public class PlanGrpTemp extends BaseEntity {
     @Column(name = "plan_grp_temp_id")
     private Long id;
 
-    @Column(name = "link",length = 300,nullable = true)
+    @Column(name = "link",length = 300,nullable = true,unique = true)
     private String link;
 
     @Column(name="receive_email",nullable = true,length = 100)
@@ -68,6 +68,18 @@ public class PlanGrpTemp extends BaseEntity {
         this.receiver = member;
     }
 
+
+    //--------DDD-------------------
+
+    /**
+     * 이메일 전송 시 업데이트
+     * @param receiveEmail
+     */
+    public void updateReceiveEmail(String receiveEmail){
+        this.receiveEmail = receiveEmail;
+    }
+
+    //DDD종료
     private PlanGrpTemp(Builder builder) {
         this.link = builder.link;
         this.isCreated = builder.isCreated;

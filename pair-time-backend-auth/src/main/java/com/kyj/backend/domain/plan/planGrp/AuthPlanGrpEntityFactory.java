@@ -1,4 +1,4 @@
-package com.kyj.backend.domain.planGrp;
+package com.kyj.backend.domain.plan.planGrp;
 
 import lombok.extern.slf4j.Slf4j;
 
