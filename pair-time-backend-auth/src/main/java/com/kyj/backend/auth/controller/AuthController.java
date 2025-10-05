@@ -1,18 +1,19 @@
 package com.kyj.backend.auth.controller;
 
 import com.kyj.backend.auth.constants.MainUIType;
+import com.kyj.backend.auth.dto.member.request.MemberFindRequest;
+import com.kyj.backend.auth.dto.member.response.MemberFindResponse;
 import com.kyj.backend.auth.dto.planGrp.request.InviteRequest;
 import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
+import com.kyj.backend.auth.service.member.MemberService;
 import com.kyj.backend.auth.service.plan.PlanGrpService;
 import com.kyj.core.api.ApiResponse;
 import com.kyj.core.security.client.util.SecurityContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 2025-10-04
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final PlanGrpService planService;
+    private final MemberService memberService;
 
     /**
      * 메인화면의 타입을 결정하는 API
@@ -44,7 +46,6 @@ public class AuthController {
                         .data(mainUITypeResponse)
                         .build());
 
-
     }
 
     /**
@@ -52,8 +53,12 @@ public class AuthController {
      * @param inviteRequest
      * @return
      */
-    @PostMapping("/invite")
-    public ResponseEntity<ApiResponse<?>> inviteMember(InviteRequest inviteRequest){
+    @PostMapping(
+              value = "/invite"
+            , consumes = MediaType.APPLICATION_JSON_VALUE
+            , produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ApiResponse<?>> inviteMember(@RequestBody InviteRequest inviteRequest){
         Long userId = Long.parseLong(SecurityContext.getUserId());
         inviteRequest.setSender(userId);
 
@@ -61,6 +66,38 @@ public class AuthController {
         return ResponseEntity
                 .ok(ApiResponse.ok());
 
+    }
+
+    /**
+     * 해당 링크에 대한 초대이메일 전송 API
+     * @param inviteRequest
+     * @return
+     */
+    @PostMapping(
+               value = "/invite/email"
+            , consumes = MediaType.APPLICATION_JSON_VALUE
+            , produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ApiResponse<?>> inviteMemberToEmail(@RequestBody InviteRequest inviteRequest){
+
+        planService.inviteMemberToEmail(inviteRequest);
+
+        return ResponseEntity
+                .ok(ApiResponse.ok());
+    }
+
+    /**
+     * 회원을 조회하는 API
+     * @param memberFindRequest
+     * @return
+     */
+    @GetMapping("/member")
+    public ResponseEntity<ApiResponse<MemberFindResponse>> findMember(@Valid MemberFindRequest memberFindRequest){
+
+        MemberFindResponse member = memberService.findMember(memberFindRequest);
+
+        return ResponseEntity
+                .ok(ApiResponse.ok(member));
     }
 
 }
