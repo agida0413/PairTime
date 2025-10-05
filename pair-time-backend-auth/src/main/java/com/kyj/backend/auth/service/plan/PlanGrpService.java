@@ -14,5 +14,5 @@ public interface PlanGrpService {
 
     public MainUITypeResponse determineMainUIType(Long userId);
     public void inviteMember(InviteRequest inviteRequest);
-
+    public void inviteMemberToEmail(InviteRequest inviteRequest);
 }

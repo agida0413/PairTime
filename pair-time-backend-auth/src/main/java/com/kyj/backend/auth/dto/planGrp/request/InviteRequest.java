@@ -18,11 +18,11 @@ import lombok.Setter;
 public class InviteRequest {
     private String link;
 
-    private Long receiver;
+    private String email; //회원 조회를 통해 찾은 이메일
 
     private Long sender;
 
-    private String receiveEmail;
+    private String receiveEmail;//이메일 전송에 대한 이메일
 
     private InviteType inviteType;
 

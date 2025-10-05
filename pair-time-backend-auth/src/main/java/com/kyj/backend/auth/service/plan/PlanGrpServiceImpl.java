@@ -107,18 +107,18 @@ public class PlanGrpServiceImpl implements PlanGrpService {
             }
             case SEND_REQUEST -> {
 
-                if(inviteRequest.getReceiver()== null){
+                if(inviteRequest.getEmail()== null){
                     log.error("초대 전송 에러 [받는 이 누락] --> 필수 값");
                     throw new KyjBizException(CmErrCode.CM001,"받는 이가 누락되었습니다.");
                 }
 
 
-                Member receiver = memberRepository.findById(inviteRequest.getReceiver())
+                Member receiver = memberRepository.findByEmail(inviteRequest.getEmail())
                         .orElseThrow(() -> new KyjBizException(CmErrCode.CM001, "받는 이가 존재하지 않습니다."));
 
                 this.inviteMemberBySendRequest(inviteRequest,sender,receiver);
 
-                log.info("정상 초대완료 = {} ",inviteRequest.getReceiver());
+                log.info("정상 초대완료 = {} ",inviteRequest.getEmail());
                 break;
             }
             default -> {
@@ -128,6 +128,42 @@ public class PlanGrpServiceImpl implements PlanGrpService {
 
         }
     }
+
+
+    /**
+     * 초대 링크 이메일 전송
+     * @param inviteRequest
+     */
+    @Transactional
+    public void inviteMemberToEmail(InviteRequest inviteRequest){
+
+        String link = inviteRequest.getLink();
+
+        if(!StringUtils.hasText(link)){
+            log.error("필수값이 누락 = link");
+            throw new KyjBizException(CmErrCode.CM002);
+        }
+
+        if(!StringUtils.hasText(inviteRequest.getReceiveEmail())){
+            log.error("필수값이 누락 = email");
+            throw new KyjBizException(CmErrCode.CM002);
+        }
+
+        PlanGrpTemp planGrpTemp = planGrpTempRepository.findByLink(link)
+                .orElseThrow(() -> {
+                    log.error("해당 링크에 대한 엔티티가 조회되지 않았습니다. = {}", link);
+                    return new KyjBizException(CmErrCode.CM002);
+                });
+        //테이블 업데이트
+        planGrpTemp.updateReceiveEmail(inviteRequest.getReceiveEmail());
+
+        DynamicMailDTO dynamicMailDTO = new DynamicMailDTO("Test","Test",inviteRequest.getReceiveEmail());
+        customMailSender.send(dynamicMailDTO);
+
+    }
+
+
+//----------------------- private 메소드 영역-------------
 
     /**
      * 초대 링크 생성을 위한 엔티티 세팅
@@ -160,16 +196,5 @@ public class PlanGrpServiceImpl implements PlanGrpService {
                 });
 
         planGrpTempRepository.save(planGrpTemp);
-    }
-
-    /**
-     * 초대 링크 이메일 전송
-     * @param inviteRequest
-     */
-    private void inviteMemberByEmail(InviteRequest inviteRequest){
-        String link = inviteRequest.getLink();
-
-        DynamicMailDTO dynamicMailDTO = new DynamicMailDTO("Test","Test",inviteRequest.getReceiveEmail());
-        customMailSender.send(dynamicMailDTO);
     }
 }
