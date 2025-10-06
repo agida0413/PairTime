@@ -23,12 +23,17 @@ const AuthInitializer: React.FC = () => {
   const location = useLocation();
   const { mainUIType, loading, error } = useAppSelector((state) => state.auth);
   const hasAttemptedFetch = useRef(false);
+  const hasRedirectedToLogin = useRef(false);
 
   // mainUIType 가져오기 (한 번만, 로그인 페이지에서는 호출 안 함)
   useEffect(() => {
     // 로그인 페이지나 인증 실패 페이지에서는 API 호출 안 함
-    if (location.pathname === '/login' || location.pathname === '/loginpg' || location.pathname === '/auth/failure') {
+    const isLoginPage = location.pathname === '/login' || location.pathname === '/loginpg' || location.pathname === '/auth/failure';
+
+    if (isLoginPage) {
       console.log('⏭️ [AuthInitializer] Skipping fetch on login/auth page');
+      hasAttemptedFetch.current = false; // 로그인 페이지에서는 리셋
+      hasRedirectedToLogin.current = false; // 로그인 페이지 도착 시 리셋
       return;
     }
 
@@ -39,18 +44,21 @@ const AuthInitializer: React.FC = () => {
     hasAttemptedFetch.current = true;
     console.log('🔄 [AuthInitializer] Fetching mainUIType...');
     dispatch(fetchMainUIType());
-  }, [dispatch, mainUIType, location.pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mainUIType, location.pathname]);
 
-  // 에러 발생 시 로그인 페이지로 리다이렉트
+  // 에러 발생 시 로그인 페이지로 리다이렉트 (한 번만)
   useEffect(() => {
-    if (error && !loading) {
+    if (error && !loading && !hasRedirectedToLogin.current) {
       console.log('❌ [AuthInitializer] Error occurred, redirecting to /login');
-      hasAttemptedFetch.current = false; // 에러 시 플래그 리셋
-      if (location.pathname !== '/login') {
+
+      if (location.pathname !== '/login' && location.pathname !== '/loginpg') {
+        hasRedirectedToLogin.current = true; // 리다이렉트 실행 표시
         navigate('/login', { replace: true });
       }
     }
-  }, [error, loading, navigate, location.pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error, loading]);
 
   // mainUIType이 업데이트되면 적절한 페이지로 리다이렉트
   useEffect(() => {
@@ -90,7 +98,8 @@ const AuthInitializer: React.FC = () => {
         }
         break;
     }
-  }, [mainUIType, loading, navigate, location.pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mainUIType, loading, location.pathname]);
 
   return null; // 렌더링할 것 없음
 };

@@ -37,8 +37,9 @@ public class PlanGrpTemp extends BaseEntity {
     private String isCreated = "N";
 
 
-    @OneToOne(mappedBy = "planGrpTemp",fetch = FetchType.LAZY, optional = true)
-    @LazyToOne(LazyToOneOption.NO_PROXY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "plan_grp_id")
+    @Column(nullable = true)
     private PlanGrp planGrp;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -71,6 +72,10 @@ public class PlanGrpTemp extends BaseEntity {
         this.receiver = member;
     }
 
+    public void setPlanGrp(PlanGrp planGrp){
+        this.planGrp = planGrp;
+    }
+
 
     //--------DDD-------------------
 
@@ -89,6 +94,7 @@ public class PlanGrpTemp extends BaseEntity {
         this.receiveEmail = builder.receiveEmail;
         this.sender = builder.sender;
         this.receiver = builder.receiver;
+        this.planGrp = builder.planGrp;
     }
 
     static class Builder {
@@ -97,6 +103,7 @@ public class PlanGrpTemp extends BaseEntity {
         private String receiveEmail;
         private Member sender;
         private Member receiver;
+        private PlanGrp planGrp;
 
         Builder() {}
 
@@ -112,6 +119,12 @@ public class PlanGrpTemp extends BaseEntity {
 
         Builder receiveEmail(String receiveEmail) {
             this.receiveEmail = receiveEmail;
+            return this;
+        }
+
+
+        Builder planGrp(PlanGrp planGrp) {
+            this.planGrp = planGrp;
             return this;
         }
 

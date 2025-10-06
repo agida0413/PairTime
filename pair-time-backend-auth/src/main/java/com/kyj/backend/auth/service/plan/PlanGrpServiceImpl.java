@@ -2,7 +2,9 @@ package com.kyj.backend.auth.service.plan;
 
 import com.kyj.backend.auth.constants.MainUIType;
 import com.kyj.backend.auth.dto.planGrp.request.InviteRequest;
+import com.kyj.backend.auth.dto.planGrp.response.InviteLinkResponse;
 import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
+import com.kyj.backend.auth.mapper.PlanGrpTempEntityDTOMapper;
 import com.kyj.backend.auth.repository.member.MemberRepository;
 import com.kyj.backend.auth.repository.planGrpMember.PlanGrpMemberRepository;
 import com.kyj.backend.auth.repository.planGrpTemp.PlanGrpTempRepository;
@@ -41,6 +43,7 @@ public class PlanGrpServiceImpl implements PlanGrpService {
     private final PlanGrpTempRepository planGrpTempRepository;
     private final MemberRepository memberRepository;
     private final CustomMailSender customMailSender;
+    private final PlanGrpTempEntityDTOMapper planGrpTempEntityDTOMapper;
     /**
      * 메인UI타입을 결정하는 서비스 메소드
      * @param userId
@@ -79,6 +82,10 @@ public class PlanGrpServiceImpl implements PlanGrpService {
     }
 
 
+    /**
+     * 회원을 초대하는 서비스
+     * @param inviteRequest
+     */
     @Transactional
     public void inviteMember(InviteRequest inviteRequest){
 
@@ -160,11 +167,47 @@ public class PlanGrpServiceImpl implements PlanGrpService {
 
         DynamicMailDTO dynamicMailDTO = new DynamicMailDTO("Test","Test",inviteRequest.getReceiveEmail());
         customMailSender.send(dynamicMailDTO);
+    }
 
+    /**
+     * 생성된 초대에 대한 링크를 제공한다.
+     * @param planGrpTempId
+     * @return
+     */
+    @Override
+    public InviteLinkResponse findLinkByInvite(Long planGrpTempId) {
+        if(planGrpTempId == null){
+            throw new KyjBizException(CmErrCode.CM001,"필수값이 누락되었습니다.[그룹임시아이디]");
+        }
+
+        PlanGrpTemp planGrpTemp = planGrpTempRepository.findById(planGrpTempId)
+                .orElseThrow(() -> {
+                    log.error("그룹임시아이디에 대한 정보를 찾을수 없습니다.");
+                    return new KyjBizException(CmErrCode.CM001, "조회결과가 없습니다.");
+                });
+
+        return planGrpTempEntityDTOMapper.toInviteLinkResponse(planGrpTemp) ;
+    }
+
+    /**
+     * 세션회원의 정보를 바탕으로 링크정보를 제공한다.
+     * @param userId
+     * @return
+     */
+    @Override
+    public InviteLinkResponse findLinkByMember(Long userId) {
+        PlanGrpTemp planGrpTemp = planGrpTempRepository.findFirstLinkPlanGrpTemp(userId)
+                .orElseThrow(() -> {
+                    log.error("회원의 링크정보를 찾을 수 없습니다.");
+                    return new KyjBizException(CmErrCode.CM001, "회원의 링크정보를 찾을 수 없습니다.");
+                });
+
+        return planGrpTempEntityDTOMapper.toInviteLinkResponse(planGrpTemp);
     }
 
 
-//----------------------- private 메소드 영역-------------
+
+    //----------------------- private 메소드 영역-------------
 
     /**
      * 초대 링크 생성을 위한 엔티티 세팅

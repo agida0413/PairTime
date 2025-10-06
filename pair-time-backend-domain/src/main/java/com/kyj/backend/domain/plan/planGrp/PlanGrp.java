@@ -33,9 +33,8 @@ public class PlanGrp extends BaseEntity {
     @NotNull
     private LocalDate loveStartAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plan_grp_temp_id")
-    private PlanGrpTemp planGrpTemp;
+    @OneToMany(mappedBy = "planGrp",cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<PlanGrpTemp> planGrpTempList = new ArrayList<>();
 
 
     @OneToMany(mappedBy = "planGrp",cascade = CascadeType.ALL)
@@ -76,30 +75,30 @@ public class PlanGrp extends BaseEntity {
         this.loveStartAt = loveStartAt;
     }
 
-    void setPlanGrpTemp(PlanGrpTemp planGrpTemp) {
-        this.planGrpTemp = planGrpTemp;
+
+    void addPlanGrpTemp(PlanGrpTemp planGrpTemp){
+        this.planGrpTempList.add(planGrpTemp);
+        planGrpTemp.setPlanGrp(this);
     }
 
+
+    void removePlanGrpTemp(PlanGrpTemp planGrpTemp){
+        this.planGrpTempList.remove(planGrpTemp);
+        planGrpTemp.setPlanGrp(null);
+    }
     private PlanGrp(Builder builder) {
         this.loveStartAt = builder.loveStartAt;
-        this.planGrpTemp = builder.planGrpTemp;
     }
 
     static class Builder {
 
         private LocalDate loveStartAt;
-        private PlanGrpTemp planGrpTemp;
 
         Builder() {}
 
 
         Builder loveStartAt(LocalDate loveStartAt) {
             this.loveStartAt = loveStartAt;
-            return this;
-        }
-
-        Builder planGrpTemp(PlanGrpTemp planGrpTemp) {
-            this.planGrpTemp = planGrpTemp;
             return this;
         }
 

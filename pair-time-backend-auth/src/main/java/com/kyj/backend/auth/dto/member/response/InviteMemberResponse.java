@@ -1,4 +1,4 @@
-package com.kyj.backend.auth.dto.planGrp.response;
+package com.kyj.backend.auth.dto.member.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

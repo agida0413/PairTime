@@ -9,6 +9,8 @@ import {
   InviteRequest,
   MemberFindRequest,
   MainUIType,
+  InviteMemberResponse,
+  InviteLinkResponse,
 } from '../../types';
 
 const initialState: AuthState = {
@@ -16,6 +18,7 @@ const initialState: AuthState = {
   user: null,
   token: null,
   mainUIType: null,
+  planGrpTempId: null,
   loading: false,
   error: null,
 };
@@ -80,6 +83,61 @@ export const findMember = createAsyncThunk<{ data: Member; msg: string }, Member
   }
 );
 
+// 초대 회원 정보 조회 (초대한 사람 또는 초대받은 사람)
+export const findInviteMember = createAsyncThunk<
+  InviteMemberResponse,
+  { planGrpTempId: number; mainUIType: MainUIType }
+>(
+  'auth/findInviteMember',
+  async ({ planGrpTempId, mainUIType }, { rejectWithValue }) => {
+    try {
+      const response = await api.get<ApiResponse<InviteMemberResponse>>(
+        `/api/v1/auth/invite/member/${planGrpTempId}`,
+        { params: { mainUIType } }
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.msg || error.response?.data?.message || 'Failed to find invite member'
+      );
+    }
+  }
+);
+
+// 초대 링크 정보 조회 (planGrpTempId 기반)
+export const findInviteLink = createAsyncThunk<InviteLinkResponse, number>(
+  'auth/findInviteLink',
+  async (planGrpTempId, { rejectWithValue }) => {
+    try {
+      const response = await api.get<ApiResponse<InviteLinkResponse>>(
+        `/api/v1/auth/invite/link/${planGrpTempId}`
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.msg || error.response?.data?.message || 'Failed to find invite link'
+      );
+    }
+  }
+);
+
+// 현재 세션(초대한 사람) 기반 링크 정보 조회
+export const findMyInviteLink = createAsyncThunk<InviteLinkResponse>(
+  'auth/findMyInviteLink',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get<ApiResponse<InviteLinkResponse>>(
+        '/api/v1/auth/invite/member/link'
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.msg || error.response?.data?.message || 'Failed to find my invite link'
+      );
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -103,6 +161,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.mainUIType = null;
+      state.planGrpTempId = null;
       localStorage.removeItem('accessToken');
     },
     clearError: (state) => {
@@ -120,7 +179,8 @@ const authSlice = createSlice({
         console.log('🎯 Redux fulfilled with payload:', action.payload);
         state.loading = false;
         state.mainUIType = action.payload.mainUIType;
-        console.log('🎯 State updated - mainUIType:', state.mainUIType);
+        state.planGrpTempId = action.payload.planGrpTempId;
+        console.log('🎯 State updated - mainUIType:', state.mainUIType, 'planGrpTempId:', state.planGrpTempId);
       })
       .addCase(fetchMainUIType.rejected, (state, action) => {
         console.log('⚠️ Redux rejected with payload:', action.payload);
@@ -169,6 +229,42 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         toast.error(action.payload as string || '회원을 찾을 수 없습니다.');
+      })
+      // findInviteMember (실패해도 글로벌 에러 설정 안함 - 정상 시나리오)
+      .addCase(findInviteMember.pending, (state) => {
+        state.loading = true;
+        // error는 건드리지 않음
+      })
+      .addCase(findInviteMember.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(findInviteMember.rejected, (state) => {
+        state.loading = false;
+        // 조회 실패는 정상 상황이므로 글로벌 error 설정 안함
+      })
+      // findInviteLink (실패해도 글로벌 에러 설정 안함 - 정상 시나리오)
+      .addCase(findInviteLink.pending, (state) => {
+        state.loading = true;
+        // error는 건드리지 않음
+      })
+      .addCase(findInviteLink.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(findInviteLink.rejected, (state) => {
+        state.loading = false;
+        // 조회 실패는 정상 상황이므로 글로벌 error 설정 안함
+      })
+      // findMyInviteLink (실패해도 글로벌 에러 설정 안함)
+      .addCase(findMyInviteLink.pending, (state) => {
+        state.loading = true;
+        // error는 건드리지 않음
+      })
+      .addCase(findMyInviteLink.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(findMyInviteLink.rejected, (state) => {
+        state.loading = false;
+        // 조회 실패는 정상 상황이므로 글로벌 error 설정 안함
       });
   },
 });

@@ -1,5 +1,6 @@
 package com.kyj.backend.auth.repository.planGrpTemp;
 
+import com.kyj.backend.domain.member.Member;
 import com.kyj.backend.domain.member.QMember;
 import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 import com.kyj.backend.domain.plan.planGrpTemp.QPlanGrpTemp;
@@ -50,35 +51,30 @@ public class PlanGrpTempRepositoryImpl implements PlanGrpTempQueryRepository{
     }
 
     /**
-     * 초대 보낸이 혹은 받는이의 정보를 가져오기 위한 쿼리
-     * @param isSender
-     * @param planGrpTempId
+     * 세션유저아이디가 초대한 가장 최신 링크 한건을 가져온다.
+     * @param userId
      * @return
      */
-    public Optional<PlanGrpTemp> findMemberInPlanGrpTemp(Boolean isSender, Long planGrpTempId){
+    @Override
+    public Optional<PlanGrpTemp> findFirstLinkPlanGrpTemp(Long userId) {
 
         return Optional.ofNullable(
-                queryFactory
-                        .select(planGrpTemp)
-                        .from(planGrpTemp)
-                        .join(Boolean.TRUE.equals(isSender) ? planGrpTemp.sender : planGrpTemp.receiver,member)
-                        .fetchJoin()
-                        .where(
-                                 planGrpTemp.id.eq(planGrpTempId)
-                               , planGrpTemp.isCreated.eq("N")
-                        )
-                        .orderBy(planGrpTemp.createdDate.desc())
-                        .limit(1)
-                        .fetchOne()
-        );
+               queryFactory
+                .select(planGrpTemp)
+                .from(planGrpTemp,planGrpTemp)
+                .where(
+                         planGrpTemp.sender.id.eq(userId)
+                        ,planGrpTemp.isCreated.eq("N")
+                )
+                .orderBy(planGrpTemp.id.desc())
+                .limit(1)
+                .fetchOne()
+       );
+
     }
 
 
-
-
-
-
-    //------------------ 동적쿼리 소스 영역 -----------
+//------------------ 동적쿼리 소스 영역 -----------
 
 
     /**
