@@ -59,7 +59,8 @@ public class PlanGrpTempRepositoryImpl implements PlanGrpTempQueryRepository{
 
         return Optional.ofNullable(
                 queryFactory
-                        .selectFrom(planGrpTemp)
+                        .select(planGrpTemp)
+                        .from(planGrpTemp)
                         .join(Boolean.TRUE.equals(isSender) ? planGrpTemp.sender : planGrpTemp.receiver,member)
                         .fetchJoin()
                         .where(

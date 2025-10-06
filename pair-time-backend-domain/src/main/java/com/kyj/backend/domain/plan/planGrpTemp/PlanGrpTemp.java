@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import jakarta.persistence.*;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
 
 /**
  * 그룹 임시생성 엔티티(초대)
@@ -35,7 +37,8 @@ public class PlanGrpTemp extends BaseEntity {
     private String isCreated = "N";
 
 
-    @OneToOne(mappedBy = "planGrpTemp",fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "planGrpTemp",fetch = FetchType.LAZY, optional = true)
+    @LazyToOne(LazyToOneOption.NO_PROXY)
     private PlanGrp planGrp;
 
     @ManyToOne(fetch = FetchType.LAZY)
