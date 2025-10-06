@@ -10,6 +10,7 @@ import com.kyj.backend.auth.repository.planGrpTemp.PlanGrpTempRepository;
 import com.kyj.backend.domain.member.Member;
 import com.kyj.core.api.CmErrCode;
 import com.kyj.core.exception.custom.KyjBizException;
+import com.kyj.core.security.client.util.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,6 @@ public class MemberServiceImpl implements MemberService{
 
     private final MemberRepository memberRepository;
     private final MemberEntityDTOMapper memberEntityDTOMapper;
-    private final PlanGrpTempRepository planGrpTempRepository;
 
     /**
      * 초대를 받거나 , 초대한 사람의 정보를 가져오기 위한 서비스
@@ -73,12 +73,14 @@ public class MemberServiceImpl implements MemberService{
     @Override
     public MemberFindResponse findMember(MemberFindRequest memberFindRequest) {
 
-        Member member = memberRepository.findByEmail(memberFindRequest.getEmail())
+        Long myId = Long.parseLong(SecurityContext.getUserId());
+
+           Member member = memberRepository.findByEmail(memberFindRequest.getEmail())
+                .filter(foundMember -> !foundMember.getId().equals(myId)) // 자신 제거
                 .orElseThrow(() -> {
                     log.error("조회된 회원이 없습니다.");
                     return new KyjBizException(CmErrCode.CM001, "조회된 회원이 없습니다.");
-                });
-        log.info("조회완료 = {}",member.getEmail());
+                });        log.info("조회완료 = {}",member.getEmail());
 
         return memberEntityDTOMapper.toMemberFindResponse(member);
     }

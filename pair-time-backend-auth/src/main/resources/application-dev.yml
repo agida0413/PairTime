@@ -152,6 +152,7 @@ kyj:
         success-redirect-url: ${OAUTH2_SUCCESS_REDIRECT_URL}
         failure-redirect-url: ${OAUTH2_SUCCESS_FAILURE_URL}
         logout-redirect-url: ${OAUTH2_SUCCESS_LOGOUT_URL}
+      base-link-url: ${BASE_LINK_URL}
     client:
       enabled: true # 클라이언트 모듈 활성화 (기본값: true)
       use-api-gateway: false  # true: API Gateway, false: JWT
@@ -172,6 +173,7 @@ kyj:
         - /oauth2/**
         - /login/**
         - /actuator/**
+        - /invite/link/**
 
 
 # ===== 로깅 설정 =====

@@ -2,6 +2,8 @@ package com.kyj.backend.auth.service.plan;
 
 import com.kyj.backend.auth.constants.MainUIType;
 import com.kyj.backend.auth.dto.planGrp.request.InviteRequest;
+import com.kyj.backend.auth.dto.planGrp.request.UpdatePlanGrpTempRequest;
+import com.kyj.backend.auth.dto.planGrp.response.InviteByLinkResponse;
 import com.kyj.backend.auth.dto.planGrp.response.InviteLinkResponse;
 import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
 import com.kyj.backend.auth.mapper.PlanGrpTempEntityDTOMapper;
@@ -20,6 +22,7 @@ import com.kyj.core.mail.DynamicMailDTO;
 import com.kyj.core.mail.MailDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -38,7 +41,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PlanGrpServiceImpl implements PlanGrpService {
-
+    @Value("${kyj.security.auth.base-link-url}")
+    private String baseLinkUrl;
     private final PlanGrpMemberRepository planGrpMemberRepository;
     private final PlanGrpTempRepository planGrpTempRepository;
     private final MemberRepository memberRepository;
@@ -93,12 +97,28 @@ public class PlanGrpServiceImpl implements PlanGrpService {
         Member sender = memberRepository.findById(inviteRequest.getSender())
                 .orElseThrow(() -> new KyjBizException(CmErrCode.CM001, "보내는 이가 누락되었습니다."));
 
+        //불리안 타입에 따라 기존 임시그룹 삭제
+        if (inviteRequest.getIsRequiredDel()){
+            if(inviteRequest.getPrevPlanGrpTempId() == null){
+                log.error("이전 임시아이디가 존재하지 않습니다.");
+                throw new KyjBizException(CmErrCode.CM002);
+            }
+            PlanGrpTemp planGrpTemp = planGrpTempRepository.findById(inviteRequest.getPrevPlanGrpTempId())
+                    .orElseThrow(() -> {
+                        log.error("이전 임시아이디에 대한 임시그룹을 찾지 못하였습니다.");
+                        return new KyjBizException(CmErrCode.CM002);
+                    });
+            //이전 임시그룹 삭제
+            planGrpTempRepository.delete(planGrpTemp);
+        }
 
         switch (inviteRequest.getInviteType()){
             case LINK -> {
 
                 UUID uuid = UUID.randomUUID();
-                String link = sender.getEmail()+uuid.toString();
+                // UUID만 링크로 사용 (이메일은 링크에 포함하지 않음)
+                String link = baseLinkUrl + uuid.toString();
+
                 inviteRequest.setLink(link);
 
                 this.inviteMemberByLink(inviteRequest,sender);
@@ -204,6 +224,39 @@ public class PlanGrpServiceImpl implements PlanGrpService {
 
         return planGrpTempEntityDTOMapper.toInviteLinkResponse(planGrpTemp);
     }
+
+    /**
+     * 링크정보를 바탕으로 임시그룹테이블을 찾고 임시테이블의 리시버를 업데이트한다.-->mainuitype으로 조회가 가능해진다.
+     * @param updatePlanGrpTempRequest
+     */
+    @Override
+    @Transactional
+    public void updatePlanGrpTempByLinkInvite(Long userId, UpdatePlanGrpTempRequest updatePlanGrpTempRequest) {
+        if(updatePlanGrpTempRequest.getLink() == null){
+            log.error("링크 정보가 없습니다.");
+            throw new KyjBizException(CmErrCode.CM002);
+        }
+        if(userId == null){
+            log.error("회원 정보가 없습니다.");
+            throw new KyjBizException(CmErrCode.CM002);
+        }
+
+        PlanGrpTemp planGrpTemp = planGrpTempRepository.findByPlanGrpTempLink(updatePlanGrpTempRequest.getLink())
+                .orElseThrow(() -> {
+                    log.error("링크정보가 없습니다.");
+                    return new KyjBizException(CmErrCode.CM002);
+                });
+
+        Member member = memberRepository.findById(userId).orElseThrow(() -> {
+            log.error("조회된 회원이 없습니다.");
+            return new KyjBizException(CmErrCode.CM002);
+        });
+
+        //업데이트
+        planGrpTemp.setReceiver(member);
+
+    }
+
 
 
 

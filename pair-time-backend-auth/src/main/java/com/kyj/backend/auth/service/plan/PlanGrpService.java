@@ -1,6 +1,8 @@
 package com.kyj.backend.auth.service.plan;
 
 import com.kyj.backend.auth.dto.planGrp.request.InviteRequest;
+import com.kyj.backend.auth.dto.planGrp.request.UpdatePlanGrpTempRequest;
+import com.kyj.backend.auth.dto.planGrp.response.InviteByLinkResponse;
 import com.kyj.backend.auth.dto.planGrp.response.InviteLinkResponse;
 import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
 import com.kyj.backend.domain.plan.planGrpTemp.InviteType;
@@ -18,4 +20,5 @@ public interface PlanGrpService {
     public void inviteMemberToEmail(InviteRequest inviteRequest);
     public InviteLinkResponse findLinkByInvite(Long planGrpTempId);
     public InviteLinkResponse findLinkByMember(Long userId);
+    public void updatePlanGrpTempByLinkInvite(Long userId, UpdatePlanGrpTempRequest updatePlanGrpTempRequest);
 }

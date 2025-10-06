@@ -2,6 +2,8 @@ package com.kyj.backend.domain.plan.planGrpTemp;
 
 import com.kyj.backend.domain.member.Member;
 import com.kyj.backend.domain.plan.planGrp.PlanGrp;
+import com.kyj.core.api.CmErrCode;
+import com.kyj.core.exception.custom.KyjBizException;
 import com.kyj.core.jpa.entity.BaseEntity;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -9,6 +11,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import jakarta.persistence.*;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.CacheMode;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 
@@ -19,6 +23,7 @@ import org.hibernate.annotations.LazyToOneOption;
 @Table(name = "PLAN_GRP_TEMP")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Slf4j
 public class PlanGrpTemp extends BaseEntity {
 
     @Id
@@ -86,6 +91,32 @@ public class PlanGrpTemp extends BaseEntity {
         this.receiveEmail = receiveEmail;
     }
 
+    /**
+     * 리시버 업데이트
+     * @param receiver
+     */
+    public void updateReceiver(Member receiver){
+        this.receiver = receiver;
+    }
+
+    /**
+     * 그룹 생성
+     * @param planGrp
+     */
+    public void createPlanGrp(PlanGrp planGrp){
+        this.isCreated = "Y";
+        this.planGrp = planGrp;
+        planGrp.getPlanGrpTempList().add(this);
+    }
+
+    /**
+     * 그룹 해체
+     * @param planGrp
+     */
+    public void removePlanGrp(PlanGrp planGrp){
+        this.planGrp =null;
+        planGrp.getPlanGrpTempList().remove(this);
+    }
     //DDD종료
     private PlanGrpTemp(Builder builder) {
         this.link = builder.link;

@@ -1,8 +1,10 @@
 package com.kyj.backend.auth.mapper;
 
+import com.kyj.backend.auth.dto.planGrp.response.InviteByLinkResponse;
 import com.kyj.backend.auth.dto.planGrp.response.InviteLinkResponse;
 import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 /**
  * 2025-10-03
@@ -13,4 +15,10 @@ import org.mapstruct.Mapper;
 public interface PlanGrpTempEntityDTOMapper {
 
     InviteLinkResponse toInviteLinkResponse(PlanGrpTemp planGrpTemp);
+
+
+    @Mapping(source = "receiver.email", target = "email")
+    @Mapping(source = "receiver.profile", target = "profile")
+    @Mapping(source = "receiver.nickname", target = "nickname")
+    InviteByLinkResponse toInviteByLinkResponse(PlanGrpTemp planGrpTemp);
 }

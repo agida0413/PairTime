@@ -1,10 +1,45 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useSearchParams } from 'react-router-dom';
 import { OAUTH2_BASE_URL } from '../services/api';
 
 const LoginPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const redirectUrlFromParams = searchParams.get('redirect');
+
+  console.log('🔐 [LoginPage] ========================================');
+  console.log('🔐 [LoginPage] Redirect URL from params:', redirectUrlFromParams);
+  console.log('🔐 [LoginPage] Redirect URL from sessionStorage:', sessionStorage.getItem('redirectAfterLogin'));
+  console.log('🔐 [LoginPage] Redirect URL from localStorage:', localStorage.getItem('redirectAfterLogin'));
+  console.log('🔐 [LoginPage] ========================================');
+
   const handleOAuthLogin = (provider: 'google' | 'naver' | 'kakao') => {
+    // 우선순위: URL params > sessionStorage > localStorage
+    let redirectUrl = redirectUrlFromParams;
+    if (!redirectUrl) {
+      redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+    }
+    if (!redirectUrl) {
+      redirectUrl = localStorage.getItem('redirectAfterLogin');
+    }
+
+    console.log('🔐 [LoginPage] Final redirect URL to save:', redirectUrl);
+
+    // 리다이렉트 URL을 sessionStorage와 localStorage 모두에 저장 (OAuth 리다이렉트 시 유실 방지)
+    if (redirectUrl) {
+      console.log('🔐 [LoginPage] Saving redirect URL to storage:', redirectUrl);
+      sessionStorage.setItem('redirectAfterLogin', redirectUrl);
+      localStorage.setItem('redirectAfterLogin', redirectUrl);
+      console.log('🔐 [LoginPage] Saved to sessionStorage:', sessionStorage.getItem('redirectAfterLogin'));
+      console.log('🔐 [LoginPage] Saved to localStorage:', localStorage.getItem('redirectAfterLogin'));
+    } else {
+      console.log('🔐 [LoginPage] No redirect URL found, clearing storage');
+      sessionStorage.removeItem('redirectAfterLogin');
+      localStorage.removeItem('redirectAfterLogin');
+    }
+
     // OAuth2는 백엔드 서버(8080)로 직접 리디렉트
+    console.log('🔐 [LoginPage] Starting OAuth with provider:', provider);
     window.location.href = `${OAUTH2_BASE_URL}/oauth2/authorization/${provider}`;
   };
 

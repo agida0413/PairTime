@@ -73,7 +73,27 @@ public class PlanGrpTempRepositoryImpl implements PlanGrpTempQueryRepository{
 
     }
 
+    /**
+     * 링크 기반으로 정보를 가져온다.
+     * @param link
+     * @return
+     */
+    public Optional<PlanGrpTemp> findByPlanGrpTempLink(String link){
 
+
+        return Optional.ofNullable(
+                queryFactory
+                        .select(planGrpTemp)
+                        .from(planGrpTemp)
+                        .where(
+                                 planGrpTemp.link.eq(link)
+                                ,planGrpTemp.isCreated.eq("N")
+                        )
+                        .orderBy(planGrpTemp.createdDate.desc())
+                        .limit(1)
+                        .fetchOne()
+        );
+    }
 //------------------ 동적쿼리 소스 영역 -----------
 
 

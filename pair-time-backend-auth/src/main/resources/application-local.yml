@@ -39,7 +39,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     properties:
       hibernate:
         format_sql: true
@@ -150,6 +150,7 @@ kyj:
   security:
     auth:
       enabled: true  # 인증 서버 모듈 활성화 (기본값: true)
+      base-link-url: ${BASE_LINK_URL} #링크 생성 베이스url
       token:
         secret: asdasdsadasdassdasdsadxxadasdasdsadsadads
         access-token-expiry: 86400000      # 24시간(로컬)
@@ -178,7 +179,7 @@ kyj:
         - /oauth2/**
         - /login/**
         - /actuator/**
-
+        - /invite/link/**
 
 # ===== 로깅 설정 =====
 logging:

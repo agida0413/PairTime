@@ -26,4 +26,8 @@ public class InviteRequest {
 
     private InviteType inviteType;
 
+    private Boolean isRequiredDel; //기존 임시 삭제여부
+
+    private Long prevPlanGrpTempId;//이전 그룹임시 아이디
+
 }

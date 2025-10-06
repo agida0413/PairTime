@@ -5,6 +5,8 @@ import com.kyj.backend.auth.dto.member.request.MemberFindRequest;
 import com.kyj.backend.auth.dto.member.response.MemberFindResponse;
 import com.kyj.backend.auth.dto.planGrp.request.InviteRequest;
 import com.kyj.backend.auth.dto.member.response.InviteMemberResponse;
+import com.kyj.backend.auth.dto.planGrp.request.UpdatePlanGrpTempRequest;
+import com.kyj.backend.auth.dto.planGrp.response.InviteByLinkResponse;
 import com.kyj.backend.auth.dto.planGrp.response.InviteLinkResponse;
 import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
 import com.kyj.backend.auth.service.member.MemberService;
@@ -143,6 +145,21 @@ public class AuthController {
 
         return ResponseEntity
                 .ok(ApiResponse.ok(linkByMember));
+    }
+
+    /**
+     * 링크를 접속 시 그룹임시 테이블의 리시버를 업데이트 한다.
+     * @param updatePlanGrpTempRequest
+     * @return
+     */
+    @PutMapping("/invite/update")
+    public ResponseEntity<ApiResponse<?>> updatePlanGrpTemp(@RequestBody UpdatePlanGrpTempRequest updatePlanGrpTempRequest){
+    Long userId = Long.parseLong(SecurityContext.getUserId());
+
+        planService.updatePlanGrpTempByLinkInvite(userId,updatePlanGrpTempRequest);
+
+        return ResponseEntity
+                .ok(ApiResponse.ok());
     }
 
 }

@@ -44,6 +44,11 @@ export interface InviteLinkResponse {
   link: string;
 }
 
+// Update PlanGrpTemp Request - 링크 초대 수락 시 receiver 업데이트
+export interface UpdatePlanGrpTempRequest {
+  link: string;
+}
+
 // Invite Types
 export enum InviteType {
   LINK = 'LINK',
@@ -56,6 +61,8 @@ export interface InviteRequest {
   sender?: number;
   receiveEmail?: string;
   inviteType: InviteType;
+  isRequiredDel?: boolean;  // 기존 임시 그룹 삭제 여부
+  prevPlanGrpTempId?: number;  // 삭제할 기존 임시 그룹 ID
 }
 
 // Auth Types

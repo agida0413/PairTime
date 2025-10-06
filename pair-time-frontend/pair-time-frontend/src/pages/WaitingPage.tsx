@@ -1,14 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import { useAppSelector } from '../hooks/useAppSelector';
-import { findInviteMember, findInviteLink, inviteMemberByEmail } from '../features/auth/authSlice';
+import { findInviteMember, findInviteLink, inviteMemberByEmail, resetMainUIType } from '../features/auth/authSlice';
 import { InviteMemberResponse, InviteLinkResponse, InviteType } from '../types';
 import { toast } from 'react-toastify';
+import { LoadingButton, InviteModal } from '../components';
 
 const WaitingPage: React.FC = () => {
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { mainUIType, planGrpTempId } = useAppSelector((state) => state.auth);
 
@@ -18,6 +17,7 @@ const WaitingPage: React.FC = () => {
   const [linkError, setLinkError] = useState<string | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailToSend, setEmailToSend] = useState<string>('');
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const hasLoadedDataRef = useRef(false);
 
   useEffect(() => {
@@ -81,6 +81,9 @@ const WaitingPage: React.FC = () => {
       ).unwrap();
       toast.success('이메일로 초대 링크가 전송되었습니다!');
       setEmailToSend(''); // 전송 후 입력창 비우기
+
+      // mainUIType 재조회 (상태 변경 반영)
+      dispatch(resetMainUIType());
     } catch (error) {
       console.error('이메일 전송 실패:', error);
       toast.error('이메일 전송에 실패했습니다.');
@@ -154,9 +157,15 @@ const WaitingPage: React.FC = () => {
                     onChange={(e) => setEmailToSend(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendEmail()}
                   />
-                  <EmailSendButton onClick={handleSendEmail} disabled={isSendingEmail || !emailToSend}>
-                    {isSendingEmail ? '전송 중...' : '📧 전송'}
-                  </EmailSendButton>
+                  <LoadingButton
+                    onClick={handleSendEmail}
+                    loading={isSendingEmail}
+                    disabled={!emailToSend}
+                    variant="primary"
+                    size="medium"
+                  >
+                    📧 전송
+                  </LoadingButton>
                 </EmailInputGroup>
               </EmailInputSection>
             </InviteSection>
@@ -180,12 +189,25 @@ const WaitingPage: React.FC = () => {
               <InfoItem>✓ 새로운 초대 링크를 생성할 수도 있어요</InfoItem>
             </InfoList>
           </InfoSection>
+
+          <NewInviteButtonWrapper>
+            <LoadingButton
+              onClick={() => setIsInviteModalOpen(true)}
+              variant="primary"
+              size="large"
+              fullWidth
+            >
+              ➕ 새 초대 만들기
+            </LoadingButton>
+          </NewInviteButtonWrapper>
         </ContentSection>
 
+        <InviteModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+        />
+
         <ButtonGroup>
-          <SecondaryButton onClick={() => navigate('/invite/create')}>
-            새 초대 만들기
-          </SecondaryButton>
           <RefreshButton onClick={() => window.location.reload()}>
             🔄 상태 새로고침
           </RefreshButton>
@@ -355,23 +377,6 @@ const ButtonGroup = styled.div`
   gap: 12px;
 `;
 
-const SecondaryButton = styled.button`
-  padding: 14px 24px;
-  background: white;
-  color: #4a5568;
-  border: 2px solid #4a5568;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: #4a5568;
-    color: white;
-  }
-`;
-
 const RefreshButton = styled.button`
   padding: 14px 24px;
   background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
@@ -530,33 +535,16 @@ const EmailInput = styled.input`
   &::placeholder {
     color: #adb5bd;
   }
-`;
-
-const EmailSendButton = styled.button`
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(45, 55, 72, 0.2);
-  white-space: nowrap;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(45, 55, 72, 0.3);
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
 
   &:disabled {
-    opacity: 0.6;
+    background-color: #f8f9fa;
     cursor: not-allowed;
+    opacity: 0.6;
   }
+`;
+
+const NewInviteButtonWrapper = styled.div`
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
 `;
