@@ -1,5 +1,9 @@
 package com.kyj.backend.auth.repository.member;
 
+import com.kyj.backend.domain.member.Member;
+
+import java.util.Optional;
+
 /**
  * 2025-10-03
  * @author 김용준
@@ -7,5 +11,6 @@ package com.kyj.backend.auth.repository.member;
  * (Query DSL , Mybatis 등)
  */
 public interface MemberQueryRepository {
+    public Optional<Member> findMemberInPlanGrpTemp(Boolean isSender, Long planGrpTempId);
 
 }

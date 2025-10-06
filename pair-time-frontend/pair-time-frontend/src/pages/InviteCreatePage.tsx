@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { toast } from 'react-toastify';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import { useAppSelector } from '../hooks/useAppSelector';
-import { inviteMember, inviteMemberByEmail, findMember } from '../features/auth/authSlice';
+import { inviteMember, inviteMemberByEmail, findMember, findMyInviteLink } from '../features/auth/authSlice';
 import { InviteType } from '../types';
 
 const InviteCreatePage: React.FC = () => {
@@ -19,19 +19,22 @@ const InviteCreatePage: React.FC = () => {
 
   const handleCreateLink = async () => {
     try {
+      // 1. 초대 링크 생성
       await dispatch(
         inviteMember({
           inviteType: InviteType.LINK,
         })
       ).unwrap();
 
-      // 실제로는 백엔드에서 생성된 링크를 받아와야 하지만,
-      // 현재는 임시로 생성
-      const mockLink = `${window.location.origin}/invite/accept?token=mock-token`;
-      setInviteLink(mockLink);
+      // 2. 현재 세션 기반으로 생성된 링크 조회
+      const linkData = await dispatch(findMyInviteLink()).unwrap();
+
+      // 3. 조회된 링크를 화면에 세팅
+      setInviteLink(linkData.link);
       toast.success('초대 링크가 생성되었습니다! 🔗');
     } catch (error) {
       console.error('Failed to create invite link:', error);
+      toast.error('초대 링크 생성에 실패했습니다.');
     }
   };
 

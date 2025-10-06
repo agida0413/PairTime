@@ -1,13 +1,13 @@
 package com.kyj.backend.auth.service.member;
 
+import com.kyj.backend.auth.constants.MainUIType;
 import com.kyj.backend.auth.dto.member.request.MemberFindRequest;
 import com.kyj.backend.auth.dto.member.response.MemberFindResponse;
-import com.kyj.backend.auth.dto.planGrp.response.InviteMemberResponse;
+import com.kyj.backend.auth.dto.member.response.InviteMemberResponse;
 import com.kyj.backend.auth.mapper.MemberEntityDTOMapper;
 import com.kyj.backend.auth.repository.member.MemberRepository;
 import com.kyj.backend.auth.repository.planGrpTemp.PlanGrpTempRepository;
 import com.kyj.backend.domain.member.Member;
-import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 import com.kyj.core.api.CmErrCode;
 import com.kyj.core.exception.custom.KyjBizException;
 import lombok.RequiredArgsConstructor;
@@ -34,29 +34,32 @@ public class MemberServiceImpl implements MemberService{
      * @return
      */
     @Override
-    public InviteMemberResponse findMemberInPlanGrpTemp(Long planGrpTempId,Boolean isSender) {
+    public InviteMemberResponse findMemberInPlanGrpTemp(Long planGrpTempId, MainUIType mainUIType) {
         if(planGrpTempId == null){
             throw new KyjBizException(CmErrCode.CM001,"필수 값이 누락되었습니다.[그룹임시아이디]");
         }
 
 
-        if(Boolean.TRUE.equals(isSender)) {
-            PlanGrpTemp planGrpTemp = planGrpTempRepository.findMemberInPlanGrpTemp(Boolean.TRUE, planGrpTempId)
+        if(mainUIType == MainUIType.ALREADY_INVITED_BY) {
+            Member member = memberRepository.findMemberInPlanGrpTemp(Boolean.TRUE, planGrpTempId)
                     .orElseThrow(() -> {
                         log.error("초대한 사람의 정보를 찾을 수 없습니다. = {}", planGrpTempId);
                         return new KyjBizException(CmErrCode.CM001, "초대한 사람의 정보를 찾을 수 없습니다.");
                     });
 
-            return memberEntityDTOMapper.toInviteMemberResponse(planGrpTemp.getReceiver());
+            return memberEntityDTOMapper.toInviteMemberResponse(member);
 
-        }else {
+        }else if (mainUIType == MainUIType.ALREADY_INVITE){
 
-            PlanGrpTemp planGrpTemp = planGrpTempRepository.findMemberInPlanGrpTemp(Boolean.FALSE, planGrpTempId)
+            Member member = memberRepository.findMemberInPlanGrpTemp(Boolean.FALSE, planGrpTempId)
                     .orElseThrow(() -> {
                         log.error("초대를 보낸 사람의 정보를 찾을 수 없습니다. = {}", planGrpTempId);
                         return new KyjBizException(CmErrCode.CM001, "초대를 보낸 사람의 정보를 찾을 수 없습니다.");
                     });
-            return memberEntityDTOMapper.toInviteMemberResponse(planGrpTemp.getSender());
+            return memberEntityDTOMapper.toInviteMemberResponse(member);
+        }else{
+            log.error("mainUIType이 잘못되었음 = {}",mainUIType.toString());
+            throw new KyjBizException(CmErrCode.CM002);
         }
 
 

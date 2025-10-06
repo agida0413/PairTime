@@ -29,6 +29,19 @@ export enum MainUIType {
 
 export interface MainUITypeResponse {
   mainUIType: MainUIType;
+  planGrpTempId: number;
+}
+
+// Invite Member Response - 초대한/받은 회원 정보
+export interface InviteMemberResponse {
+  email: string;
+  nickname: string;
+  profile: string;
+}
+
+// Invite Link Response - 초대 링크 정보
+export interface InviteLinkResponse {
+  link: string;
 }
 
 // Invite Types
@@ -51,6 +64,7 @@ export interface AuthState {
   user: Member | null;
   token: string | null;
   mainUIType: MainUIType | null;
+  planGrpTempId: number | null;
   loading: boolean;
   error: string | null;
 }

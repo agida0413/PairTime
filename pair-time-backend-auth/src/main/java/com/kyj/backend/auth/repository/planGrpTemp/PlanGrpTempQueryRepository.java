@@ -1,5 +1,6 @@
 package com.kyj.backend.auth.repository.planGrpTemp;
 
+import com.kyj.backend.domain.member.Member;
 import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 
 import java.util.Optional;
@@ -13,5 +14,5 @@ import java.util.Optional;
  * */
 public interface PlanGrpTempQueryRepository {
     public Optional<PlanGrpTemp> findFirstInvitePlanGrpTemp(Boolean isInvited,Long userId);
-    public Optional<PlanGrpTemp> findMemberInPlanGrpTemp(Boolean isSender, Long planGrpTempId);
+    public Optional<PlanGrpTemp> findFirstLinkPlanGrpTemp(Long userId);
     }

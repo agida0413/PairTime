@@ -1,18 +1,43 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useAppDispatch } from '../hooks/useAppDispatch';
+import { useAppSelector } from '../hooks/useAppSelector';
+import { findInviteMember } from '../features/auth/authSlice';
+import { InviteMemberResponse } from '../types';
 
 const InviteReceivedPage: React.FC = () => {
   const navigate = useNavigate();
-  const [isAccepting, setIsAccepting] = useState(false);
+  const dispatch = useAppDispatch();
+  const { mainUIType, planGrpTempId } = useAppSelector((state) => state.auth);
 
-  // TODO: 실제로는 백엔드에서 초대 정보를 가져와야 합니다
-  const inviterInfo = {
-    nickname: '홍길동',
-    email: 'hong@example.com',
-    profile: '',
-  };
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [inviterInfo, setInviterInfo] = useState<InviteMemberResponse | null>(null);
+  const hasLoadedDataRef = useRef(false);
+
+  useEffect(() => {
+    // 이미 데이터를 로드했거나 필요한 정보가 없으면 스킵
+    if (!planGrpTempId || !mainUIType || hasLoadedDataRef.current) {
+      return;
+    }
+
+    // 데이터 로드 시작
+    hasLoadedDataRef.current = true;
+
+    // 초대한 회원 정보 조회
+    dispatch(findInviteMember({ planGrpTempId, mainUIType }))
+      .unwrap()
+      .then((data) => {
+        console.log('✅ 초대한 회원 정보 조회 성공:', data);
+        setInviterInfo(data);
+      })
+      .catch((error) => {
+        console.log('ℹ️ 초대한 회원 정보 조회 실패:', error);
+        // 실패해도 토스트 메시지 표시 안함 (정상 시나리오일 수 있음)
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planGrpTempId, mainUIType]);
 
   const handleAccept = async () => {
     setIsAccepting(true);
@@ -51,13 +76,21 @@ const InviteReceivedPage: React.FC = () => {
 
         <InviterSection>
           <InviterLabel>초대한 사람</InviterLabel>
-          <InviterCard>
-            <Avatar src={inviterInfo.profile || '/default-avatar.png'} alt="inviter" />
-            <InviterInfo>
-              <InviterName>{inviterInfo.nickname}</InviterName>
-              <InviterEmail>{inviterInfo.email}</InviterEmail>
-            </InviterInfo>
-          </InviterCard>
+          {inviterInfo ? (
+            <InviterCard>
+              <Avatar src={inviterInfo.profile || '/default-avatar.png'} alt="inviter" />
+              <InviterInfo>
+                <InviterName>{inviterInfo.nickname}</InviterName>
+                <InviterEmail>{inviterInfo.email}</InviterEmail>
+              </InviterInfo>
+            </InviterCard>
+          ) : (
+            <InviterCard>
+              <InviterInfo>
+                <InviterName>정보를 불러오는 중...</InviterName>
+              </InviterInfo>
+            </InviterCard>
+          )}
         </InviterSection>
 
         <FeatureSection>
@@ -75,6 +108,13 @@ const InviteReceivedPage: React.FC = () => {
               <FeatureText>
                 <FeatureName>기념일 관리</FeatureName>
                 <FeatureDesc>소중한 날들을 기록하고 함께 기억하세요</FeatureDesc>
+              </FeatureText>
+            </FeatureItem>
+            <FeatureItem>
+              <FeatureIcon>💰</FeatureIcon>
+              <FeatureText>
+                <FeatureName>지출 관리</FeatureName>
+                <FeatureDesc>함께하는 지출을 기록하고 관리하세요</FeatureDesc>
               </FeatureText>
             </FeatureItem>
             <FeatureItem>
