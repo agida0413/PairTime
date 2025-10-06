@@ -2,6 +2,9 @@ package com.kyj.backend.domain.plan.planGrp;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDate;
+import java.util.Optional;
+
 /**
  * 2025-10-03
  * @author 김용준
@@ -11,4 +14,16 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class AuthPlanGrpEntityFactory {
+    /**
+     * 신규 그룹생성 엔티티
+     * @param loveStartedAt
+     * @return
+     */
+    public static Optional<PlanGrp> createPlanGrp(LocalDate loveStartedAt){
+        return Optional.ofNullable(
+                new PlanGrp.Builder()
+                        .loveStartAt(loveStartedAt)
+                        .build()
+        );
+    }
 }

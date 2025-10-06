@@ -1,6 +1,7 @@
 package com.kyj.backend.auth.service.plan;
 
 import com.kyj.backend.auth.constants.MainUIType;
+import com.kyj.backend.auth.dto.planGrp.request.CreatePlanGrpRequest;
 import com.kyj.backend.auth.dto.planGrp.request.InviteRequest;
 import com.kyj.backend.auth.dto.planGrp.request.UpdatePlanGrpTempRequest;
 import com.kyj.backend.auth.dto.planGrp.response.InviteByLinkResponse;
@@ -8,10 +9,13 @@ import com.kyj.backend.auth.dto.planGrp.response.InviteLinkResponse;
 import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
 import com.kyj.backend.auth.mapper.PlanGrpTempEntityDTOMapper;
 import com.kyj.backend.auth.repository.member.MemberRepository;
+import com.kyj.backend.auth.repository.planGrp.PlanGrpRepository;
 import com.kyj.backend.auth.repository.planGrpMember.PlanGrpMemberRepository;
 import com.kyj.backend.auth.repository.planGrpTemp.PlanGrpTempRepository;
 import com.kyj.backend.domain.member.Member;
 import com.kyj.backend.domain.plan.plaGrpMember.PlanGrpMember;
+import com.kyj.backend.domain.plan.planGrp.AuthPlanGrpEntityFactory;
+import com.kyj.backend.domain.plan.planGrp.PlanGrp;
 import com.kyj.backend.domain.plan.planGrpTemp.AuthPlanGrpTempEntityFactory;
 import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 import com.kyj.backend.domain.plan.planGrpTemp.InviteType;
@@ -46,6 +50,7 @@ public class PlanGrpServiceImpl implements PlanGrpService {
     private final PlanGrpMemberRepository planGrpMemberRepository;
     private final PlanGrpTempRepository planGrpTempRepository;
     private final MemberRepository memberRepository;
+    private final PlanGrpRepository planGrpRepository;
     private final CustomMailSender customMailSender;
     private final PlanGrpTempEntityDTOMapper planGrpTempEntityDTOMapper;
     /**
@@ -253,14 +258,41 @@ public class PlanGrpServiceImpl implements PlanGrpService {
         });
 
         //업데이트
-        planGrpTemp.setReceiver(member);
+        planGrpTemp.updateReceiver(member);
+
+    }
+
+    /**
+     * 실제 그룹 생성
+     * @param createPlanGrpRequest
+     */
+    @Override
+    @Transactional
+    public void createPlanGrp(CreatePlanGrpRequest createPlanGrpRequest) {
+        PlanGrpTemp planGrpTemp = planGrpTempRepository.findById(createPlanGrpRequest.getPlanGrpTempId())
+                .orElseThrow(() -> {
+                    log.error("planGrpTempId에 대한 조회결과가 없음");
+                    return new KyjBizException(CmErrCode.CM002);
+                });
+
+        PlanGrp planGrp = AuthPlanGrpEntityFactory.createPlanGrp(createPlanGrpRequest.getLoveStartedAt())
+                .orElseThrow(() -> {
+                    log.error("PlanGrp 엔티티생성 실패");
+                    return new KyjBizException(CmErrCode.CM002);
+                });
+
+        //실제 그룹테이블 생성
+        planGrpRepository.save(planGrp);
+
+        planGrp.addPlanGrpMember(planGrpTemp.getSender());
+
+        //임시테이블 업데이트
+        planGrpTemp.createPlanGrp(planGrp);
 
     }
 
 
-
-
-    //----------------------- private 메소드 영역-------------
+//----------------------- private 메소드 영역-------------
 
     /**
      * 초대 링크 생성을 위한 엔티티 세팅
