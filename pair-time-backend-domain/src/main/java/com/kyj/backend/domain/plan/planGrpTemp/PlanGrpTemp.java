@@ -39,7 +39,6 @@ public class PlanGrpTemp extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "plan_grp_id")
-    @Column(nullable = true)
     private PlanGrp planGrp;
 
     @ManyToOne(fetch = FetchType.LAZY)
