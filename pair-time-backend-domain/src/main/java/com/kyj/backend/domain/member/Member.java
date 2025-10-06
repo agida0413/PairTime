@@ -95,6 +95,7 @@ public class Member extends BaseEntity {
      */
     public void removePlanGrpTempByMeList(PlanGrpTemp planGrpTemp){
         this.planGrpTempListByMe.remove(planGrpTemp);
+
         planGrpTemp.setSender(null);
     }
 
