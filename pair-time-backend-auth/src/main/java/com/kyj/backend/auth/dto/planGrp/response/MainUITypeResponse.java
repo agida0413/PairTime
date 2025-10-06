@@ -13,4 +13,5 @@ import lombok.*;
 @AllArgsConstructor
 public class MainUITypeResponse {
     private MainUIType mainUIType;
+    private Long planGrpTempId;
 }
