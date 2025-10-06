@@ -6,6 +6,7 @@ import { useAppDispatch } from '../hooks/useAppDispatch';
 import { useAppSelector } from '../hooks/useAppSelector';
 import { findInviteMember } from '../features/auth/authSlice';
 import { InviteMemberResponse } from '../types';
+import { LoadingButton } from '../components';
 
 const InviteReceivedPage: React.FC = () => {
   const navigate = useNavigate();
@@ -48,6 +49,10 @@ const InviteReceivedPage: React.FC = () => {
       // 임시로 2초 후 캘린더로 이동
       setTimeout(() => {
         toast.success('초대를 수락했습니다! 이제 함께 일정을 관리할 수 있습니다. 💕');
+
+        // mainUIType 재조회 (상태 변경 반영) - TODO: acceptInvite API 구현 후 추가
+        // dispatch(resetMainUIType());
+
         navigate('/calendar');
       }, 2000);
     } catch (error) {
@@ -61,6 +66,10 @@ const InviteReceivedPage: React.FC = () => {
     if (window.confirm('정말로 초대를 거절하시겠습니까?')) {
       // TODO: API 호출하여 초대 거절 처리
       toast.info('초대를 거절했습니다.');
+
+      // mainUIType 재조회 (상태 변경 반영) - TODO: rejectInvite API 구현 후 추가
+      // dispatch(resetMainUIType());
+
       navigate('/invite/create');
     }
   };
@@ -128,12 +137,24 @@ const InviteReceivedPage: React.FC = () => {
         </FeatureSection>
 
         <ButtonGroup>
-          <AcceptButton onClick={handleAccept} disabled={isAccepting}>
-            {isAccepting ? '수락 중...' : '💖 초대 수락하기'}
-          </AcceptButton>
-          <RejectButton onClick={handleReject} disabled={isAccepting}>
+          <LoadingButton
+            onClick={handleAccept}
+            loading={isAccepting}
+            variant="danger"
+            size="large"
+            fullWidth
+          >
+            💖 초대 수락하기
+          </LoadingButton>
+          <LoadingButton
+            onClick={handleReject}
+            disabled={isAccepting}
+            variant="secondary"
+            size="medium"
+            fullWidth
+          >
             거절하기
-          </RejectButton>
+          </LoadingButton>
         </ButtonGroup>
       </Card>
     </Container>
@@ -307,53 +328,4 @@ const ButtonGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-`;
-
-const AcceptButton = styled.button`
-  padding: 16px 24px;
-  background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(255, 107, 157, 0.4);
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255, 107, 157, 0.5);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-`;
-
-const RejectButton = styled.button`
-  padding: 14px 24px;
-  background: white;
-  color: #666;
-  border: 2px solid #dee2e6;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover:not(:disabled) {
-    background: #f8f9fa;
-    border-color: #adb5bd;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
 `;

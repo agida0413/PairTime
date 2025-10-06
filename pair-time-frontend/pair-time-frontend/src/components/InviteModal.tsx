@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
 import { useAppDispatch } from '../hooks/useAppDispatch';
+import { useAppSelector } from '../hooks/useAppSelector';
 import { inviteMember, findMember, findMyInviteLink, resetMainUIType } from '../features/auth/authSlice';
 import { InviteType } from '../types';
-import { LoadingButton } from '../components';
+import LoadingButton from './LoadingButton';
 
-const InviteCreatePage: React.FC = () => {
+interface InviteModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useAppDispatch();
+  const { planGrpTempId } = useAppSelector((state) => state.auth);
 
   const [activeTab, setActiveTab] = useState<'link' | 'member'>('link');
   const [inviteLink, setInviteLink] = useState<string>('');
@@ -21,11 +28,12 @@ const InviteCreatePage: React.FC = () => {
   const handleCreateLink = async () => {
     setIsCreatingLink(true);
     try {
-      // 1. 초대 링크 생성 (초대 페이지에서는 삭제하지 않음)
+      // 1. 초대 링크 생성 (기존 임시 그룹 삭제)
       await dispatch(
         inviteMember({
           inviteType: InviteType.LINK,
-          isRequiredDel: false,
+          isRequiredDel: true,
+          prevPlanGrpTempId: planGrpTempId || undefined,
         })
       ).unwrap();
 
@@ -38,6 +46,10 @@ const InviteCreatePage: React.FC = () => {
 
       // 4. mainUIType 재조회 (상태 변경 반영)
       dispatch(resetMainUIType());
+
+      // 5. 모달 닫고 페이지 새로고침
+      onClose();
+      window.location.reload();
     } catch (error) {
       console.error('Failed to create invite link:', error);
       toast.error('초대 링크 생성에 실패했습니다.');
@@ -52,7 +64,6 @@ const InviteCreatePage: React.FC = () => {
     setTimeout(() => setShowCopied(false), 2000);
     toast.success('링크가 클립보드에 복사되었습니다! 📋');
   };
-
 
   const handleSearchMember = async () => {
     if (!searchEmail) {
@@ -71,6 +82,7 @@ const InviteCreatePage: React.FC = () => {
     } catch (error) {
       console.error('Failed to find member:', error);
       setFoundMember(null);
+      toast.error('회원을 찾을 수 없습니다.');
     } finally {
       setIsSearching(false);
     }
@@ -85,7 +97,8 @@ const InviteCreatePage: React.FC = () => {
         inviteMember({
           email: foundMember.email,
           inviteType: InviteType.SEND_REQUEST,
-          isRequiredDel: false,
+          isRequiredDel: true,
+          prevPlanGrpTempId: planGrpTempId || undefined,
         })
       ).unwrap();
 
@@ -95,6 +108,10 @@ const InviteCreatePage: React.FC = () => {
 
       // mainUIType 재조회 (상태 변경 반영)
       dispatch(resetMainUIType());
+
+      // 모달 닫고 페이지 새로고침
+      onClose();
+      window.location.reload();
     } catch (error) {
       console.error('Failed to invite member:', error);
     } finally {
@@ -102,19 +119,33 @@ const InviteCreatePage: React.FC = () => {
     }
   };
 
+  const handleClose = () => {
+    // 상태 초기화
+    setActiveTab('link');
+    setInviteLink('');
+    setSearchEmail('');
+    setFoundMember(null);
+    setShowCopied(false);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Container>
-      <Card>
+    <Overlay onClick={handleClose}>
+      <ModalCard onClick={(e) => e.stopPropagation()}>
+        <CloseButton onClick={handleClose}>✕</CloseButton>
+
         <Header>
-          <Title>💌 커플 초대하기</Title>
+          <Title>💌 새 초대 만들기</Title>
           <Subtitle>소중한 사람을 초대하여 함께 일정을 관리하세요</Subtitle>
         </Header>
 
         <TabContainer>
-          <Tab $active={activeTab === 'link'} onClick={() => setActiveTab('link')}>
+          <Tab active={activeTab === 'link'} onClick={() => setActiveTab('link')}>
             링크 생성
           </Tab>
-          <Tab $active={activeTab === 'member'} onClick={() => setActiveTab('member')}>
+          <Tab active={activeTab === 'member'} onClick={() => setActiveTab('member')}>
             회원 검색
           </Tab>
         </TabContainer>
@@ -197,41 +228,84 @@ const InviteCreatePage: React.FC = () => {
             </TabContent>
           )}
         </ContentArea>
-      </Card>
-    </Container>
+      </ModalCard>
+    </Overlay>
   );
 };
 
-export default InviteCreatePage;
+export default InviteModal;
+
+// Animations
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+const slideUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 // Styled Components
-const Container = styled.div`
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 40px 20px;
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 10000;
+  animation: ${fadeIn} 0.3s ease-out;
+  padding: 20px;
 `;
 
-const Card = styled.div`
+const ModalCard = styled.div`
   background: white;
   border-radius: 20px;
   max-width: 600px;
   width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
-  animation: fadeInUp 0.6s ease-out;
+  position: relative;
+  animation: ${slideUp} 0.3s ease-out;
+`;
 
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+const CloseButton = styled.button`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  color: #666;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 1;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.2);
+    transform: rotate(90deg);
   }
 `;
 
@@ -259,22 +333,23 @@ const TabContainer = styled.div`
 `;
 
 interface TabProps {
-  $active: boolean;
+  active: boolean;
 }
 
 const Tab = styled.button<TabProps>`
   flex: 1;
   padding: 16px;
-  background: ${(props) => (props.$active ? 'white' : '#f8f9fa')};
-  color: ${(props) => (props.$active ? '#4a5568' : '#666')};
+  background: ${(props) => (props.active ? 'white' : '#f8f9fa')};
+  color: ${(props) => (props.active ? '#4a5568' : '#666')};
   border: none;
-  border-bottom: ${(props) => (props.$active ? '3px solid #4a5568' : 'none')};
-  font-weight: ${(props) => (props.$active ? '600' : '400')};
+  border-bottom: ${(props) => (props.active ? '3px solid #4a5568' : 'none')};
+  font-weight: ${(props) => (props.active ? '600' : '400')};
   font-size: 14px;
   transition: all 0.3s ease;
+  cursor: pointer;
 
   &:hover {
-    background: ${(props) => (props.$active ? 'white' : '#f0f0f0')};
+    background: ${(props) => (props.active ? 'white' : '#f0f0f0')};
   }
 `;
 
@@ -338,6 +413,7 @@ const CopyButton = styled.button`
 `;
 
 const Input = styled.input`
+  flex: 1;
   padding: 12px 16px;
   border: 2px solid #e9ecef;
   border-radius: 8px;

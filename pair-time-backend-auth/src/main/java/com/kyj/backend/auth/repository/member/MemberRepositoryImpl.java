@@ -1,6 +1,8 @@
 package com.kyj.backend.auth.repository.member;
 
 import com.kyj.backend.domain.member.Member;
+import com.kyj.backend.domain.member.QMember;
+import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 
@@ -38,4 +40,6 @@ public class MemberRepositoryImpl implements MemberQueryRepository{
                         .fetchOne()
         );
     }
+
+
 }

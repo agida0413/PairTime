@@ -15,4 +15,5 @@ import java.util.Optional;
 public interface PlanGrpTempQueryRepository {
     public Optional<PlanGrpTemp> findFirstInvitePlanGrpTemp(Boolean isInvited,Long userId);
     public Optional<PlanGrpTemp> findFirstLinkPlanGrpTemp(Long userId);
+    public Optional<PlanGrpTemp> findByPlanGrpTempLink(String link);
     }

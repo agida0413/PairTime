@@ -11,6 +11,7 @@ import {
   MainUIType,
   InviteMemberResponse,
   InviteLinkResponse,
+  UpdatePlanGrpTempRequest,
 } from '../../types';
 
 const initialState: AuthState = {
@@ -138,6 +139,38 @@ export const findMyInviteLink = createAsyncThunk<InviteLinkResponse>(
   }
 );
 
+// 인증 확인 API 호출
+export const verifyAuthentication = createAsyncThunk<void>(
+  'auth/verifyAuthentication',
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('📡 [verifyAuthentication] Checking authentication...');
+      await api.post('/api/v1/auth/client/verify');
+      console.log('✅ [verifyAuthentication] Authenticated');
+    } catch (error: any) {
+      console.error('❌ [verifyAuthentication] Not authenticated:', error.response?.status);
+      return rejectWithValue(error.response?.status || 401);
+    }
+  }
+);
+
+// 링크 초대 수락 - PlanGrpTemp의 receiver 업데이트
+export const updatePlanGrpTempByLink = createAsyncThunk<void, UpdatePlanGrpTempRequest>(
+  'auth/updatePlanGrpTempByLink',
+  async (updateRequest, { rejectWithValue }) => {
+    try {
+      console.log('📡 [updatePlanGrpTempByLink] Updating with link:', updateRequest.link);
+      await api.put('/api/v1/auth/invite/update', updateRequest);
+      console.log('✅ [updatePlanGrpTempByLink] Update successful');
+    } catch (error: any) {
+      console.error('❌ [updatePlanGrpTempByLink] Error:', error.response?.data);
+      return rejectWithValue(
+        error.response?.data?.msg || error.response?.data?.message || '초대 링크 처리에 실패했습니다.'
+      );
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -166,6 +199,11 @@ const authSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    // mainUIType 초기화 (재조회를 위해)
+    resetMainUIType: (state) => {
+      state.mainUIType = null;
+      state.planGrpTempId = null;
     },
   },
   extraReducers: (builder) => {
@@ -216,10 +254,10 @@ const authSlice = createSlice({
         state.error = action.payload as string;
         toast.error(action.payload as string || '이메일 전송에 실패했습니다.');
       })
-      // findMember
+      // findMember (실패해도 글로벌 에러 설정 안함 - 정상 시나리오)
       .addCase(findMember.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        // error는 건드리지 않음
       })
       .addCase(findMember.fulfilled, (state) => {
         state.loading = false;
@@ -227,8 +265,8 @@ const authSlice = createSlice({
       })
       .addCase(findMember.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
-        toast.error(action.payload as string || '회원을 찾을 수 없습니다.');
+        // 조회 실패는 정상 상황이므로 글로벌 error 설정 안함
+        // toast는 컴포넌트에서 처리
       })
       // findInviteMember (실패해도 글로벌 에러 설정 안함 - 정상 시나리오)
       .addCase(findInviteMember.pending, (state) => {
@@ -269,5 +307,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setAuthenticated, setUser, setToken, logout, clearError } = authSlice.actions;
+export const { setAuthenticated, setUser, setToken, logout, clearError, resetMainUIType } = authSlice.actions;
 export default authSlice.reducer;
