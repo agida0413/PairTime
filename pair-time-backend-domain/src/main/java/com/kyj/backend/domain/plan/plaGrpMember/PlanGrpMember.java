@@ -38,29 +38,22 @@ public class PlanGrpMember extends BaseEntity {
     @NotNull
     private Member member;
 
-
-     PlanGrpMember(PlanGrpMember.Builder builder) {
-        this.planGrp = builder.planGrp;
-        this.member = builder.member;
+    // ---- 생성 로직 ----
+    private PlanGrpMember(PlanGrp planGrp, Member member) {
+        this.planGrp = planGrp;
+        this.member = member;
     }
 
-    public static class Builder {
+    // 연관관계 편의 메서드
+    public static PlanGrpMember create(PlanGrp planGrp, Member member) {
+        PlanGrpMember planGrpMember = new PlanGrpMember(planGrp, member);
 
-        private PlanGrp planGrp;
-        private Member member;
+        // 양방향 연관관계 설정
+        planGrp.getPlanGrpMembers().add(planGrpMember);
+        member.getPlanGrpMembers().add(planGrpMember);
 
-        public Builder() {}
-
-
-        public PlanGrpMember.Builder createPlanGrpMember(Member member,PlanGrp planGrp) {
-            this.member = member;
-            this.planGrp = planGrp;
-            return this;
-        }
-
-
-        public PlanGrpMember build() {
-            return new PlanGrpMember(this);
-        }
+        return planGrpMember;
     }
+
+
 }
