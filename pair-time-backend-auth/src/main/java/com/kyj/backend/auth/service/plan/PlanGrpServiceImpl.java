@@ -282,7 +282,11 @@ public class PlanGrpServiceImpl implements PlanGrpService {
                 });
 
         //실제 그룹테이블 생성
-        planGrpRepository.save(planGrp);
+
+        PlanGrpMember member1 = new PlanGrpMember.Builder().createPlanGrpMember(planGrpTemp.getReceiver(), planGrp).build();
+        PlanGrpMember member2 = new PlanGrpMember.Builder().createPlanGrpMember(planGrpTemp.getSender(), planGrp).build();
+
+
 
         planGrp.addPlanGrpMember(planGrpTemp.getSender());
 
