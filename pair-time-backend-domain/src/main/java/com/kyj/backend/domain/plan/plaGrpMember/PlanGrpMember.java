@@ -38,38 +38,28 @@ public class PlanGrpMember extends BaseEntity {
     @NotNull
     private Member member;
 
-    public PlanGrpMember createPlanGrpMember(PlanGrp planGrp,Member member){
 
-        this.planGrp = planGrp;
-        this.member = member;
-
-        return this;
-    }
-
-    private PlanGrpMember(PlanGrpMember.Builder builder) {
+     PlanGrpMember(PlanGrpMember.Builder builder) {
         this.planGrp = builder.planGrp;
         this.member = builder.member;
     }
 
-    static class Builder {
+    public static class Builder {
 
         private PlanGrp planGrp;
         private Member member;
 
-        Builder() {}
+        public Builder() {}
 
 
-        PlanGrpMember.Builder planGrp(PlanGrp planGrp) {
+        public PlanGrpMember.Builder createPlanGrpMember(Member member,PlanGrp planGrp) {
+            this.member = member;
             this.planGrp = planGrp;
             return this;
         }
 
-        PlanGrpMember.Builder member(Member member) {
-            this.member = member;
-            return this;
-        }
 
-        PlanGrpMember build() {
+        public PlanGrpMember build() {
             return new PlanGrpMember(this);
         }
     }
