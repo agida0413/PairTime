@@ -35,7 +35,7 @@ public class PlanGrpTemp extends BaseEntity {
     private String isCreated = "N";
 
 
-    @OneToOne(mappedBy = "planGrpTemp")
+    @OneToOne(mappedBy = "planGrpTemp",fetch = FetchType.LAZY)
     private PlanGrp planGrp;
 
     @ManyToOne(fetch = FetchType.LAZY)

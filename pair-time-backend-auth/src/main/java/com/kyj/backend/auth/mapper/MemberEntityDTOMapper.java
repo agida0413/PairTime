@@ -1,6 +1,7 @@
 package com.kyj.backend.auth.mapper;
 
 import com.kyj.backend.auth.dto.member.response.MemberFindResponse;
+import com.kyj.backend.auth.dto.planGrp.response.InviteMemberResponse;
 import com.kyj.backend.domain.member.Member;
 import com.kyj.core.security.auth.dto.AuthMemberDTO;
 import org.mapstruct.Mapper;
@@ -24,4 +25,5 @@ public interface MemberEntityDTOMapper {
 
     MemberFindResponse toMemberFindResponse(Member member);
 
+    InviteMemberResponse toInviteMemberResponse(Member member);
 }

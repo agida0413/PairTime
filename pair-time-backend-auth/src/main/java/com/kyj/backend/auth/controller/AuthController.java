@@ -4,10 +4,13 @@ import com.kyj.backend.auth.constants.MainUIType;
 import com.kyj.backend.auth.dto.member.request.MemberFindRequest;
 import com.kyj.backend.auth.dto.member.response.MemberFindResponse;
 import com.kyj.backend.auth.dto.planGrp.request.InviteRequest;
+import com.kyj.backend.auth.dto.planGrp.response.InviteMemberResponse;
 import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
 import com.kyj.backend.auth.service.member.MemberService;
 import com.kyj.backend.auth.service.plan.PlanGrpService;
 import com.kyj.core.api.ApiResponse;
+import com.kyj.core.api.CmErrCode;
+import com.kyj.core.exception.custom.KyjBizException;
 import com.kyj.core.security.client.util.SecurityContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -98,6 +101,14 @@ public class AuthController {
 
         return ResponseEntity
                 .ok(ApiResponse.ok(member));
+    }
+
+    @GetMapping("/invite/member/{planGrpTempId}")
+    public ResponseEntity<ApiResponse<InviteMemberResponse>> findMemberInPlanGrpTemp(
+            @PathVariable Long planGrpTempId,Boolean isSender){
+        InviteMemberResponse inviteMemberResponse = memberService.findMemberInPlanGrpTemp(planGrpTempId,isSender);
+
+        return ResponseEntity.ok(ApiResponse.ok(inviteMemberResponse));
     }
 
 }

@@ -1,5 +1,6 @@
 package com.kyj.backend.auth.repository.planGrpTemp;
 
+import com.kyj.backend.domain.member.QMember;
 import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 import com.kyj.backend.domain.plan.planGrpTemp.QPlanGrpTemp;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
+import static com.kyj.backend.domain.member.QMember.*;
 import static com.kyj.backend.domain.plan.planGrpTemp.QPlanGrpTemp.*;
 
 /**
@@ -35,16 +37,48 @@ public class PlanGrpTempRepositoryImpl implements PlanGrpTempQueryRepository{
 
        return Optional.ofNullable(
                queryFactory
-                .selectFrom(planGrpTemp)
-                .where(
-                         receiverEq(isInvited,userId)
-                        ,senderEq(isInvited,userId)
-                        ,planGrpTemp.isCreated.eq("N")
-                )
+                        .selectFrom(planGrpTemp)
+                        .where(
+                              receiverEq(isInvited,userId)
+                            , senderEq(isInvited,userId)
+                            , planGrpTemp.isCreated.eq("N")
+                        )
+                       .orderBy(planGrpTemp.createdDate.desc())
                 .limit(1)
                 .fetchOne()
        );
     }
+
+    /**
+     * 초대 보낸이 혹은 받는이의 정보를 가져오기 위한 쿼리
+     * @param isSender
+     * @param planGrpTempId
+     * @return
+     */
+    public Optional<PlanGrpTemp> findMemberInPlanGrpTemp(Boolean isSender, Long planGrpTempId){
+
+        return Optional.ofNullable(
+                queryFactory
+                        .selectFrom(planGrpTemp)
+                        .join(Boolean.TRUE.equals(isSender) ? planGrpTemp.sender : planGrpTemp.receiver,member)
+                        .fetchJoin()
+                        .where(
+                                 planGrpTemp.id.eq(planGrpTempId)
+                               , planGrpTemp.isCreated.eq("N")
+                        )
+                        .orderBy(planGrpTemp.createdDate.desc())
+                        .limit(1)
+                        .fetchOne()
+        );
+    }
+
+
+
+
+
+
+    //------------------ 동적쿼리 소스 영역 -----------
+
 
     /**
      * 초대받은 조회 였을 때

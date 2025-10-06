@@ -155,9 +155,9 @@ kyj:
         access-token-expiry: 86400000      # 24시간(로컬)
         refresh-token-expiry: 86400000    # 24시간
       oauth2:
-        success-redirect-url: http://localhost:3000/auth/success
+        success-redirect-url: http://localhost:3000/
         failure-redirect-url: http://localhost:3000/auth/failure
-        logout-redirect-url: http://localhost:3000/
+        logout-redirect-url: http://localhost:3000/loginpg
     client:
       enabled: true # 클라이언트 모듈 활성화 (기본값: true)
       use-api-gateway: false  # true: API Gateway, false: JWT

@@ -1,0 +1,43 @@
+# Nginx 설정 예시
+# /etc/nginx/sites-available/pairtime 또는 /etc/nginx/conf.d/pairtime.conf
+
+server {
+    listen 80;
+    server_name yourdomain.com;  # 실제 도메인으로 변경
+
+    # /api/v1/auth/* 경로는 백엔드(8080)로 프록시
+    location /api/v1/auth/ {
+        proxy_pass http://localhost:8080/api/v1/auth/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # 쿠키 전달
+        proxy_set_header Cookie $http_cookie;
+        proxy_pass_header Set-Cookie;
+    }
+
+    # 프론트엔드 정적 파일 서빙
+    root /var/www/pairtime/build;
+    index index.html;
+
+    # React Router를 위한 설정 (모든 경로를 index.html로)
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 정적 파일 캐싱
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+
+# 설정 설명:
+# - OAuth2 로그인: 프론트엔드에서 http://localhost:8080/oauth2/authorization/{provider}로 직접 리디렉트
+# - API 호출: 프론트엔드에서 http://localhost:80/api/v1/auth/* → Nginx → 8080포트로 프록시
+#
+# 프론트엔드 .env 설정:
+# REACT_APP_OAUTH2_URL=http://localhost:8080 (또는 https://yourdomain.com:8080)
+# REACT_APP_API_URL=http://localhost:80 (또는 https://yourdomain.com)

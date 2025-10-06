@@ -54,7 +54,7 @@ public class PlanGrpServiceImpl implements PlanGrpService {
 
         if (memberOpt.isPresent()) {
             log.info("그룹존재[그룹멤버아이디] = {}", memberOpt.get().getId());
-            return new MainUITypeResponse(MainUIType.CALENDAR);
+            return new MainUITypeResponse(MainUIType.CALENDAR,null);
         }
 
         log.info("그룹미존재");
@@ -63,18 +63,19 @@ public class PlanGrpServiceImpl implements PlanGrpService {
         Optional<PlanGrpTemp> invitedOpt = planGrpTempRepository.findFirstInvitePlanGrpTemp(Boolean.TRUE, userId);
         if (invitedOpt.isPresent()) {
             log.info("초대받은 내용 있음");
-            return new MainUITypeResponse(MainUIType.ALREADY_INVITED_BY);
+            return new MainUITypeResponse(MainUIType.ALREADY_INVITED_BY,invitedOpt.orElseThrow().getId());
         }
 
         // 3. 내가 초대한 내역 조회
         Optional<PlanGrpTemp> sentInviteOpt = planGrpTempRepository.findFirstInvitePlanGrpTemp(Boolean.FALSE, userId);
         if (sentInviteOpt.isPresent()) {
             log.info("초대한 내용 있음");
-            return new MainUITypeResponse(MainUIType.ALREADY_INVITE);
+
+            return new MainUITypeResponse(MainUIType.ALREADY_INVITE,sentInviteOpt.orElseThrow().getId());
         }
 
         // 4. 어떤 내역도 없으면
-        return new MainUITypeResponse(MainUIType.REQUIRED_INVITE);
+        return new MainUITypeResponse(MainUIType.REQUIRED_INVITE,null);
     }
 
 
