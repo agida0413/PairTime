@@ -1,11 +1,12 @@
 package com.kyj.backend.auth.service.member;
 
 import com.kyj.backend.auth.constants.AuthErrCode;
+import com.kyj.backend.auth.mapper.DtoTODomainDtoMapper;
 import com.kyj.backend.auth.mapper.MemberEntityDTOMapper;
 import com.kyj.backend.auth.repository.member.MemberRepository;
-import com.kyj.backend.domain.member.AuthMemberEntityFactory;
 
 import com.kyj.backend.domain.member.Member;
+import com.kyj.backend.domain.member.dto.DomainMemberDTO;
 import com.kyj.core.api.CmErrCode;
 import com.kyj.core.exception.custom.KyjBizException;
 import com.kyj.core.security.auth.dto.AuthMemberDTO;
@@ -40,6 +41,7 @@ public class CustomAuthMemberService implements AuthMemberService {
      */
     private final MemberEntityDTOMapper memberEntityDTOMapper;
 
+    private final DtoTODomainDtoMapper dtoTODomainDtoMapper;
     /**
      * 회원 조회 또는 생성
      * @param oAuth2Response
@@ -83,17 +85,13 @@ public class CustomAuthMemberService implements AuthMemberService {
 
         if(member == null){
             //회원가입 엔티티 생성(DDD)
-            Optional<Member> optionalJoinMember = AuthMemberEntityFactory.createJoinMember(paramAuthMemberDTO);
+            DomainMemberDTO domainMemberDTO = dtoTODomainDtoMapper.toDomainMemberDTO(paramAuthMemberDTO);
+            Member createMember = Member.createMember(domainMemberDTO);
 
-            if(optionalJoinMember.isPresent()){
-                Member joinMember =  optionalJoinMember.get();
-                memberRepository.save(joinMember);
-                log.info("회원가입 세팅 = {}",joinMember.getUsername());
-                returnAuthMemberDTO=  memberEntityDTOMapper.toAuthMemberDTO(joinMember);
-            }else{
-                log.error("findOrCreateMember.Member 객체 생성 실패");
-                return null;
-            }
+                memberRepository.save(createMember);
+                log.info("회원가입 세팅 = {}",createMember.getUsername());
+                returnAuthMemberDTO=  memberEntityDTOMapper.toAuthMemberDTO(createMember);
+
 
         }else{
             returnAuthMemberDTO = memberEntityDTOMapper.toAuthMemberDTO(member);

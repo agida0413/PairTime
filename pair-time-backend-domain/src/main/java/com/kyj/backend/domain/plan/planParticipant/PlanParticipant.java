@@ -40,32 +40,5 @@ public class PlanParticipant extends BaseEntity {
     private Member participant;
 
 
-    private PlanParticipant(PlanParticipant.Builder builder) {
-        this.planM = builder.planM;
-        this.participant = builder.participant;
-    }
-
-    static class Builder {
-
-        private PlanM planM;
-        private Member participant;
-
-        Builder() {}
-
-
-        Builder planGrp(PlanM planM) {
-            this.planM = planM;
-            return this;
-        }
-
-        Builder member(Member member) {
-            this.participant = member;
-            return this;
-        }
-
-        PlanParticipant build() {
-            return new PlanParticipant(this);
-        }
-    }
 }
 

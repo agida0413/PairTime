@@ -2,7 +2,6 @@ plugins {
     id 'java-library'
     id 'org.springframework.boot' version '3.5.6'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'maven-publish'
 }
 
 group = 'com.kyj'
@@ -30,6 +29,10 @@ configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 dependencies {
+    // 개발 편의를 위한 다른 모듈 참조 (빌드에는 포함되지 않음)
+//    compileOnly project(':pair-time-backend')
+//    compileOnly project(':pair-time-backend-auth')
+
     // Lombok (먼저 선언)
     compileOnly 'org.projectlombok:lombok'
     compileOnly 'com.kyj:kyj-lib-core:0.0.1-SNAPSHOT'
@@ -59,30 +62,4 @@ jar {
 
 tasks.named('test') {
     useJUnitPlatform()
-}
-
-// Maven Publishing 설정
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-
-            groupId = 'com.kyj'
-            artifactId = 'pair-time-backend-domain'
-            version = '0.0.1-SNAPSHOT'
-        }
-    }
-
-    repositories {
-        maven {
-            def releasesRepoUrl = "http://192.168.56.1:9090/repository/kyj-lib-core/"
-            def snapshotsRepoUrl = "http://192.168.56.1:9090/repository/kyj-lib-core/"
-            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-            allowInsecureProtocol = true
-            credentials {
-                username = "admin"
-                password = "1234"
-            }
-        }
-    }
 }

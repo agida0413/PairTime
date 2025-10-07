@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import jakarta.persistence.*;
+import lombok.Setter;
 
 /**
  * 계획에 대한 평점(리뷰) 엔티티
@@ -17,6 +18,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "PLAN_REVIEW")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlanReview extends BaseEntity {
 
@@ -37,49 +39,37 @@ public class PlanReview extends BaseEntity {
     @NotNull
     private Member reviewer;
 
-
-    void setRating(BigDecimal rating) {
-        this.rating = rating;
-    }
-
-    public void setPlanM(PlanM planM){
-        this.planM = planM;
-    }
-
-    public void setMember(Member member){
-        this.reviewer = member;
-    }
-
-    private PlanReview(Builder builder) {
-        this.rating = builder.rating;
-        this.planM = builder.planM;
-        this.reviewer = builder.reviewer;
-    }
-
-    static class Builder {
-        private BigDecimal rating;
-        private PlanM planM;
-        private Member reviewer;
-
-        Builder() {}
-
-        Builder rating(BigDecimal rating) {
-            this.rating = rating;
-            return this;
-        }
-
-        Builder planM(PlanM planM) {
-            this.planM = planM;
-            return this;
-        }
-
-        Builder reviewer(Member member) {
-            this.reviewer = member;
-            return this;
-        }
-
-        PlanReview build() {
-            return new PlanReview(this);
-        }
-    }
+//
+//    private PlanReview(Builder builder) {
+//        this.rating = builder.rating;
+//        this.planM = builder.planM;
+//        this.reviewer = builder.reviewer;
+//    }
+//
+//    static class Builder {
+//        private BigDecimal rating;
+//        private PlanM planM;
+//        private Member reviewer;
+//
+//        Builder() {}
+//
+//        Builder rating(BigDecimal rating) {
+//            this.rating = rating;
+//            return this;
+//        }
+//
+//        Builder planM(PlanM planM) {
+//            this.planM = planM;
+//            return this;
+//        }
+//
+//        Builder reviewer(Member member) {
+//            this.reviewer = member;
+//            return this;
+//        }
+//
+//        PlanReview build() {
+//            return new PlanReview(this);
+//        }
+//    }
 }

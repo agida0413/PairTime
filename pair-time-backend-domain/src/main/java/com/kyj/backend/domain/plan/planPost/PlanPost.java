@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.*;
+import lombok.Setter;
 
 /**
  * 계획(일정) 에 대한 게시물 엔티티
@@ -19,6 +20,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "PLAN_POST")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlanPost extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,67 +43,57 @@ public class PlanPost extends BaseEntity {
     @NotNull
     private PlanM planM;
 
-    void setTitle(String title) {
-        this.title = title;
-    }
-
-    void setContent(String content) {
-        this.content = content;
-    }
-
-    public void setPlanM(PlanM planM){
-        this.planM = planM;
-    }
 
 
-    /**
-     * 연관관계 편의메소드
-     * @param file
-     */
-    public void addFile(File file) {
-        files.add(file);
-        file.setPlanPost(this);
-    }
 
-    /**
-     * 연관관계 편의메소드
-     * @param file
-     */
-    public void removeFile(File file) {
-        files.remove(file);
-        file.setPlanPost(null);
-    }
-
-    private PlanPost(Builder builder) {
-        this.title = builder.title;
-        this.content = builder.content;
-        this.planM = builder.planM;
-    }
-
-    static class Builder {
-        private String title;
-        private String content;
-        private PlanM planM;
-
-        Builder() {}
-
-        Builder title(String title) {
-            this.title = title;
-            return this;
-        }
-
-        Builder content(String content) {
-            this.content = content;
-            return this;
-        }
-
-        Builder planM(PlanM planM) {
-            this.planM = planM;
-            return this;
-        }
-
-        PlanPost build() {
-            return new PlanPost(this);
-        }
-    }
+//    /**
+//     * 연관관계 편의메소드
+//     * @param file
+//     */
+//    public void addFile(File file) {
+//        files.add(file);
+//        file.setPlanPost(this);
+//    }
+//
+//    /**
+//     * 연관관계 편의메소드
+//     * @param file
+//     */
+//    public void removeFile(File file) {
+//        files.remove(file);
+//        file.setPlanPost(null);
+//    }
+//
+//    private PlanPost(Builder builder) {
+//        this.title = builder.title;
+//        this.content = builder.content;
+//        this.planM = builder.planM;
+//    }
+//
+//    static class Builder {
+//        private String title;
+//        private String content;
+//        private PlanM planM;
+//
+//        Builder() {}
+//
+//        Builder title(String title) {
+//            this.title = title;
+//            return this;
+//        }
+//
+//        Builder content(String content) {
+//            this.content = content;
+//            return this;
+//        }
+//
+//        Builder planM(PlanM planM) {
+//            this.planM = planM;
+//            return this;
+//        }
+//
+//        PlanPost build() {
+//            return new PlanPost(this);
+//        }
+//    }
 }

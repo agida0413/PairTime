@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "PLAN_EXP_D")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlanExpD extends BaseEntity {
 
@@ -37,49 +38,44 @@ public class PlanExpD extends BaseEntity {
     @NotNull
     private PlanExp planExp;
 
-
-    void setExpenditure(BigDecimal expenditure) {
-        this.expenditure = expenditure;
-    }
-
-    void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setPlanExp(PlanExp planExp){
+    private PlanExpD(BigDecimal expenditure,String title,PlanExp planExp){
+        this.expenditure =expenditure;
+        this.title =title;
         this.planExp = planExp;
     }
 
-    private PlanExpD(Builder builder) {
-        this.expenditure = builder.expenditure;
-        this.title = builder.title;
-        this.planExp = builder.planExp;
-    }
 
-    static class Builder {
-        private BigDecimal expenditure;
-        private String title;
-        private PlanExp planExp;
-
-        Builder() {}
-
-        Builder expenditure(BigDecimal expenditure) {
-            this.expenditure = expenditure;
-            return this;
-        }
-
-        Builder title(String title) {
-            this.title = title;
-            return this;
-        }
-
-        Builder planExp(PlanExp planExp) {
-            this.planExp = planExp;
-            return this;
-        }
-
-        PlanExpD build() {
-            return new PlanExpD(this);
-        }
-    }
+//
+//    private PlanExpD(Builder builder) {
+//        this.expenditure = builder.expenditure;
+//        this.title = builder.title;
+//        this.planExp = builder.planExp;
+//    }
+//
+//    static class Builder {
+//        private BigDecimal expenditure;
+//        private String title;
+//        private PlanExp planExp;
+//
+//        Builder() {}
+//
+//        Builder expenditure(BigDecimal expenditure) {
+//            this.expenditure = expenditure;
+//            return this;
+//        }
+//
+//        Builder title(String title) {
+//            this.title = title;
+//            return this;
+//        }
+//
+//        Builder planExp(PlanExp planExp) {
+//            this.planExp = planExp;
+//            return this;
+//        }
+//
+//        PlanExpD build() {
+//            return new PlanExpD(this);
+//        }
+//    }
 }

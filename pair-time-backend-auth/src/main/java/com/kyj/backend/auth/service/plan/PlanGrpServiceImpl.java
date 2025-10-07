@@ -14,9 +14,7 @@ import com.kyj.backend.auth.repository.planGrpMember.PlanGrpMemberRepository;
 import com.kyj.backend.auth.repository.planGrpTemp.PlanGrpTempRepository;
 import com.kyj.backend.domain.member.Member;
 import com.kyj.backend.domain.plan.plaGrpMember.PlanGrpMember;
-import com.kyj.backend.domain.plan.planGrp.AuthPlanGrpEntityFactory;
 import com.kyj.backend.domain.plan.planGrp.PlanGrp;
-import com.kyj.backend.domain.plan.planGrpTemp.AuthPlanGrpTempEntityFactory;
 import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
 import com.kyj.backend.domain.plan.planGrpTemp.InviteType;
 import com.kyj.core.api.CmErrCode;
@@ -123,7 +121,7 @@ public class PlanGrpServiceImpl implements PlanGrpService {
                 UUID uuid = UUID.randomUUID();
                 // UUID만 링크로 사용 (이메일은 링크에 포함하지 않음)
                 String link = baseLinkUrl + uuid.toString();
-
+                //ddd전환
                 inviteRequest.setLink(link);
 
                 this.inviteMemberByLink(inviteRequest,sender);
@@ -275,23 +273,18 @@ public class PlanGrpServiceImpl implements PlanGrpService {
                     return new KyjBizException(CmErrCode.CM002);
                 });
 
-        PlanGrp planGrp = AuthPlanGrpEntityFactory.createPlanGrp(createPlanGrpRequest.getLoveStartedAt())
-                .orElseThrow(() -> {
-                    log.error("PlanGrp 엔티티생성 실패");
-                    return new KyjBizException(CmErrCode.CM002);
-                });
+        PlanGrp planGrp = PlanGrp.createPlanGrp(planGrpTemp,createPlanGrpRequest.getLoveStartedAt());
 
         //실제 그룹테이블 생성
 
-        PlanGrpMember member1 = new PlanGrpMember.Builder().createPlanGrpMember(planGrpTemp.getReceiver(), planGrp).build();
-        PlanGrpMember member2 = new PlanGrpMember.Builder().createPlanGrpMember(planGrpTemp.getSender(), planGrp).build();
+        PlanGrpMember member1 = PlanGrpMember.create(planGrp,planGrpTemp.getReceiver());
+        PlanGrpMember member2 = PlanGrpMember.create(planGrp,planGrpTemp.getSender());
 
+        planGrpRepository.save(planGrp);
 
-
-        planGrp.addPlanGrpMember(planGrpTemp.getSender());
 
         //임시테이블 업데이트
-        planGrpTemp.createPlanGrp(planGrp);
+
 
     }
 
@@ -305,11 +298,9 @@ public class PlanGrpServiceImpl implements PlanGrpService {
      */
     private void inviteMemberByLink(InviteRequest inviteRequest,Member sender){
 
-        PlanGrpTemp planGrpTemp = AuthPlanGrpTempEntityFactory.createPlanGrpTemp(inviteRequest, sender)
-                .orElseThrow(() -> {
-                    log.error("초대 링크 생성을 위한 엔티티 생성 실패");
-                    return new KyjBizException(CmErrCode.CM002);
-                });
+
+        PlanGrpTemp planGrpTemp = PlanGrpTemp.createPlanGrpTemp(inviteRequest.getLink(),inviteRequest.getEmail(),sender);
+
 
         planGrpTempRepository.save(planGrpTemp);
 
@@ -322,11 +313,8 @@ public class PlanGrpServiceImpl implements PlanGrpService {
      * @param receiver
      */
     private void inviteMemberBySendRequest(InviteRequest inviteRequest,Member sender,Member receiver){
-        PlanGrpTemp planGrpTemp = AuthPlanGrpTempEntityFactory.createPlanGrpTemp(inviteRequest, sender, receiver)
-                .orElseThrow(() -> {
-                    log.error("이미 가입중인 회원 초대 엔티티 생성 실패");
-                    return new KyjBizException(CmErrCode.CM002);
-                });
+
+        PlanGrpTemp planGrpTemp =PlanGrpTemp.createPlanGrpTempWithReceiver(inviteRequest.getLink(),inviteRequest.getEmail(),sender,receiver);
 
         planGrpTempRepository.save(planGrpTemp);
     }
