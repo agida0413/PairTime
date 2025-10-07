@@ -5,7 +5,7 @@ import { useAppSelector } from '../hooks/useAppSelector';
 import { findInviteMember, findInviteLink, inviteMemberByEmail, resetMainUIType } from '../features/auth/authSlice';
 import { InviteMemberResponse, InviteLinkResponse, InviteType } from '../types';
 import { toast } from 'react-toastify';
-import { LoadingButton, InviteModal } from '../components';
+import { LoadingButton, InviteModal, LogoutButton } from '../components';
 
 const WaitingPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -21,24 +21,27 @@ const WaitingPage: React.FC = () => {
   const hasLoadedDataRef = useRef(false);
 
   useEffect(() => {
-    // 이미 데이터를 로드했거나 필요한 정보가 없으면 스킵
-    if (!planGrpTempId || !mainUIType || hasLoadedDataRef.current) {
+    // 필요한 정보가 없으면 스킵
+    if (!planGrpTempId || !mainUIType) {
+      console.log('⏭️ [WaitingPage] Missing planGrpTempId or mainUIType, skipping data load');
       return;
     }
 
-    // 데이터 로드 시작
+    // planGrpTempId가 변경되면 hasLoadedDataRef 리셋 (새로고침 대응)
+    console.log('🔄 [WaitingPage] Loading data for planGrpTempId:', planGrpTempId);
     hasLoadedDataRef.current = true;
 
     // 초대받은 회원 정보 조회 (실패는 정상 - 링크 초대일 수 있음)
     dispatch(findInviteMember({ planGrpTempId, mainUIType }))
       .unwrap()
       .then((data) => {
-        console.log('✅ 초대받은 회원 정보 조회 성공:', data);
+        console.log('✅ [WaitingPage] 초대받은 회원 정보 조회 성공:', data);
         setInvitedMember(data);
         setMemberError(null);
       })
       .catch((error) => {
-        console.log('ℹ️ 초대받은 실존 회원 없음 (링크 초대일 수 있음)');
+        console.log('ℹ️ [WaitingPage] 초대받은 실존 회원 없음 (링크 초대일 수 있음)');
+        setInvitedMember(null);
         setMemberError(error);
       });
 
@@ -46,12 +49,13 @@ const WaitingPage: React.FC = () => {
     dispatch(findInviteLink(planGrpTempId))
       .unwrap()
       .then((data) => {
-        console.log('✅ 초대 링크 정보 조회 성공:', data);
+        console.log('✅ [WaitingPage] 초대 링크 정보 조회 성공:', data);
         setInviteLink(data);
         setLinkError(null);
       })
       .catch((error) => {
-        console.log('ℹ️ 초대 링크 없음 (회원 초대일 수 있음)');
+        console.log('ℹ️ [WaitingPage] 초대 링크 없음 (회원 초대일 수 있음)');
+        setInviteLink(null);
         setLinkError(error);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -94,6 +98,7 @@ const WaitingPage: React.FC = () => {
 
   return (
     <Container>
+      <LogoutButton />
       <Card>
         <AnimationSection>
           <WaitingIcon>⏰</WaitingIcon>

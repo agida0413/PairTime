@@ -109,6 +109,15 @@ public class PlanGrpTemp extends BaseEntity {
     }
 
     /**
+     * 초대 거절
+     * @param sender
+     */
+    public void rejectInvite(Member sender){
+          this.sender = null;
+          sender.getPlanGrpTempListByMe().remove(this);
+    }
+
+    /**
      * 그룹임시 생성(리시버 포함)
      * @param link
      * @param email

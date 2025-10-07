@@ -2,11 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import { useAppSelector } from '../hooks/useAppSelector';
-import { findInviteMember } from '../features/auth/authSlice';
+import { findInviteMember, resetMainUIType } from '../features/auth/authSlice';
 import { InviteMemberResponse } from '../types';
-import { LoadingButton } from '../components';
+import { LoadingButton, LogoutButton } from '../components';
+import axios from 'axios';
 
 const InviteReceivedPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +18,7 @@ const InviteReceivedPage: React.FC = () => {
 
   const [isAccepting, setIsAccepting] = useState(false);
   const [inviterInfo, setInviterInfo] = useState<InviteMemberResponse | null>(null);
+  const [loveStartedAt, setLoveStartedAt] = useState<Date | null>(null);
   const hasLoadedDataRef = useRef(false);
 
   useEffect(() => {
@@ -41,20 +45,32 @@ const InviteReceivedPage: React.FC = () => {
   }, [planGrpTempId, mainUIType]);
 
   const handleAccept = async () => {
+    if (!loveStartedAt) {
+      toast.warning('우리가 만난 날을 선택해주세요! 📅');
+      return;
+    }
+
+    if (!planGrpTempId) {
+      toast.error('초대 정보가 없습니다.');
+      return;
+    }
+
     setIsAccepting(true);
     try {
-      // TODO: API 호출하여 초대 수락 처리
-      // await dispatch(acceptInvite(inviteId)).unwrap();
+      // ISO 8601 형식으로 날짜 변환 (YYYY-MM-DDTHH:mm:ss)
+      const formattedDate = loveStartedAt.toISOString().split('.')[0];
 
-      // 임시로 2초 후 캘린더로 이동
-      setTimeout(() => {
-        toast.success('초대를 수락했습니다! 이제 함께 일정을 관리할 수 있습니다. 💕');
+      await axios.post('/api/v1/auth/group', {
+        planGrpTempId,
+        loveStartedAt: formattedDate
+      });
 
-        // mainUIType 재조회 (상태 변경 반영) - TODO: acceptInvite API 구현 후 추가
-        // dispatch(resetMainUIType());
+      toast.success('초대를 수락했습니다! 이제 함께 일정을 관리할 수 있습니다. 💕');
 
-        navigate('/calendar');
-      }, 2000);
+      // mainUIType 재조회
+      dispatch(resetMainUIType());
+
+      navigate('/calendar');
     } catch (error) {
       console.error('Failed to accept invite:', error);
       toast.error('초대 수락에 실패했습니다.');
@@ -62,20 +78,34 @@ const InviteReceivedPage: React.FC = () => {
     }
   };
 
-  const handleReject = () => {
-    if (window.confirm('정말로 초대를 거절하시겠습니까?')) {
-      // TODO: API 호출하여 초대 거절 처리
+  const handleReject = async () => {
+    if (!window.confirm('정말로 초대를 거절하시겠습니까?')) {
+      return;
+    }
+
+    if (!planGrpTempId) {
+      toast.error('초대 정보가 없습니다.');
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/v1/auth/group/${planGrpTempId}`);
+
       toast.info('초대를 거절했습니다.');
 
-      // mainUIType 재조회 (상태 변경 반영) - TODO: rejectInvite API 구현 후 추가
-      // dispatch(resetMainUIType());
+      // mainUIType 재조회
+      dispatch(resetMainUIType());
 
       navigate('/invite/create');
+    } catch (error) {
+      console.error('초대 거절 실패:', error);
+      toast.error('초대 거절에 실패했습니다.');
     }
   };
 
   return (
     <Container>
+      <LogoutButton />
       <Card>
         <Header>
           <HeartIcon>💕</HeartIcon>
@@ -101,6 +131,33 @@ const InviteReceivedPage: React.FC = () => {
             </InviterCard>
           )}
         </InviterSection>
+
+        <DateSection>
+          <DateLabel>💝 우리가 만난 날은 언제인가요?</DateLabel>
+          <DatePickerWrapper>
+            <DatePicker
+              selected={loveStartedAt ?? undefined}
+              onChange={(date: Date | null) => setLoveStartedAt(date)}
+              dateFormat="yyyy년 MM월 dd일"
+              placeholderText="날짜를 선택해주세요"
+              maxDate={new Date()}
+              showYearDropdown
+              showMonthDropdown
+              dropdownMode="select"
+              className="custom-datepicker"
+            />
+            <CalendarIcon>📅</CalendarIcon>
+          </DatePickerWrapper>
+          {loveStartedAt && (
+            <SelectedDateText>
+              선택된 날짜: {loveStartedAt.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </SelectedDateText>
+          )}
+        </DateSection>
 
         <FeatureSection>
           <FeatureTitle>함께 할 수 있는 것들</FeatureTitle>
@@ -328,4 +385,77 @@ const ButtonGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+`;
+
+const DateSection = styled.div`
+  padding: 32px 40px;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
+`;
+
+const DateLabel = styled.p`
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+  text-align: center;
+`;
+
+const DatePickerWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .custom-datepicker {
+    width: 100%;
+    max-width: 300px;
+    padding: 14px 44px 14px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+      border-color: #ff6b9d;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #ff6b9d;
+      box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+    }
+
+    &::placeholder {
+      color: #adb5bd;
+    }
+  }
+
+  .react-datepicker-wrapper {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .react-datepicker__input-container {
+    width: 100%;
+  }
+`;
+
+const CalendarIcon = styled.span`
+  position: absolute;
+  right: calc(50% - 140px);
+  font-size: 20px;
+  pointer-events: none;
+`;
+
+const SelectedDateText = styled.p`
+  margin-top: 12px;
+  text-align: center;
+  font-size: 14px;
+  color: #ff6b9d;
+  font-weight: 600;
 `;

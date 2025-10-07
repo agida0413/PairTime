@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { LogoutButton } from '../components';
 
 const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -57,6 +58,7 @@ const CalendarPage: React.FC = () => {
 
   return (
     <Container>
+      <LogoutButton />
       <Header>
         <TopBar>
           <UserSection>
