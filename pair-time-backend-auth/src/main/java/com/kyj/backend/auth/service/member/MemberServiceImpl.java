@@ -14,6 +14,9 @@ import com.kyj.core.security.client.util.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
 /**
  * 2025-10-03
  * @author 김용준

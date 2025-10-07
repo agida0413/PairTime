@@ -163,10 +163,29 @@ public class AuthController {
                 .ok(ApiResponse.ok());
     }
 
+    /**
+     * 초대 수락
+     * @param createPlanGrpRequest
+     * @return
+     */
     @PostMapping("/group")
     public ResponseEntity<ApiResponse<?>> createGroup(@RequestBody CreatePlanGrpRequest createPlanGrpRequest){
 
         planService.createPlanGrp(createPlanGrpRequest);
+
+        return ResponseEntity
+                .ok(ApiResponse.ok());
+    }
+
+    /**
+     * 초대 거절
+     * @param planGrpTempId
+     * @return
+     */
+    @DeleteMapping("/group/{planGrpTempId}")
+    public ResponseEntity<ApiResponse<?>> rejectGroup(@PathVariable Long planGrpTempId){
+
+        planService.removePlanGrp(planGrpTempId);
 
         return ResponseEntity
                 .ok(ApiResponse.ok());

@@ -23,4 +23,5 @@ public interface PlanGrpService {
     public InviteLinkResponse findLinkByMember(Long userId);
     public void updatePlanGrpTempByLinkInvite(Long userId, UpdatePlanGrpTempRequest updatePlanGrpTempRequest);
     public void createPlanGrp(CreatePlanGrpRequest createPlanGrpRequest);
+    public void removePlanGrp(Long planGrpTempID);
 }

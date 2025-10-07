@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import { inviteMember, findMember, findMyInviteLink, resetMainUIType } from '../features/auth/authSlice';
 import { InviteType } from '../types';
-import { LoadingButton } from '../components';
+import { LoadingButton, LogoutButton } from '../components';
 
 const InviteCreatePage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -104,6 +104,7 @@ const InviteCreatePage: React.FC = () => {
 
   return (
     <Container>
+      <LogoutButton />
       <Card>
         <Header>
           <Title>💌 커플 초대하기</Title>

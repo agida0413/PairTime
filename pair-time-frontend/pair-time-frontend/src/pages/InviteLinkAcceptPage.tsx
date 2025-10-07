@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { toast } from 'react-toastify';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import { updatePlanGrpTempByLink, verifyAuthentication } from '../features/auth/authSlice';
-import { LoadingSpinner } from '../components';
+import { LoadingSpinner, LogoutButton } from '../components';
 
 const InviteLinkAcceptPage: React.FC = () => {
   const { link } = useParams<{ link: string }>();
@@ -81,6 +81,7 @@ const InviteLinkAcceptPage: React.FC = () => {
 
   return (
     <Container>
+      <LogoutButton />
       <Card>
         <LoadingSpinner fullscreen />
         <Message>초대를 처리하고 있습니다...</Message>
