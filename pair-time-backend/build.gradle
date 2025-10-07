@@ -32,7 +32,7 @@ configurations.all {
 }
 dependencies {
     // 도메인 모듈 의존성
-    implementation 'com.kyj:pair-time-backend-domain:0.0.1-SNAPSHOT'
+    implementation project(':pair-time-backend-domain')
 
     // 라이브러리 의존성
     implementation 'com.kyj:kyj-lib-core:0.0.1-SNAPSHOT'

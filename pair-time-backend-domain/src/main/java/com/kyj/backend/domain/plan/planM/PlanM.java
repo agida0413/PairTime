@@ -23,6 +23,7 @@ import java.util.List;import jakarta.persistence.*;
 @Entity
 @Table(name = "PLAN_M")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlanM extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -90,40 +91,6 @@ public class PlanM extends BaseEntity {
 
 
 
-    void setTitle(String title) {
-        this.title = title;
-    }
-
-    void setContent(String content) {
-        this.content = content;
-    }
-
-    void setAlarmYn(String alarmYn) {
-        this.alarmYn = alarmYn;
-    }
-
-    void setStartAt(LocalDateTime startAt) {
-        this.startAt = startAt;
-    }
-
-    void setEndAt(LocalDateTime endAt) {
-        this.endAt = endAt;
-    }
-
-    void setDelYn(String delYn) {
-        this.delYn = delYn;
-    }
-
-    void setPlanType(PlanType planType) {
-        this.planType = planType;
-    }
-
-
-
-    public void setPlanGrp(PlanGrp planGrp){
-        this.planGrp = planGrp;
-    }
-
 
     /**
      * 연관관계 편의 메소드
@@ -189,72 +156,5 @@ public class PlanM extends BaseEntity {
         planParticipant.setPlanM(null);
     }
 
-    private PlanM(Builder builder) {
-        this.title = builder.title;
-        this.content = builder.content;
-        this.alarmYn = builder.alarmYn;
-        this.startAt = builder.startAt;
-        this.endAt = builder.endAt;
-        this.delYn = builder.delYn;
-        this.planType = builder.planType;
-        this.planGrp = builder.planGrp;
-    }
 
-    static class Builder {
-        private String title;
-        private String content;
-        private String alarmYn = "N";
-        private LocalDateTime startAt;
-        private LocalDateTime endAt;
-        private String delYn = "N";
-        private PlanType planType;
-        private PlanGrp planGrp;
-
-        Builder() {}
-
-        Builder title(String title) {
-            this.title = title;
-            return this;
-        }
-
-        Builder content(String content) {
-            this.content = content;
-            return this;
-        }
-
-        Builder alarmYn(String alarmYn) {
-            this.alarmYn = alarmYn;
-            return this;
-        }
-
-        Builder startAt(LocalDateTime startAt) {
-            this.startAt = startAt;
-            return this;
-        }
-
-        Builder endAt(LocalDateTime endAt) {
-            this.endAt = endAt;
-            return this;
-        }
-
-        Builder delYn(String delYn) {
-            this.delYn = delYn;
-            return this;
-        }
-
-        Builder planType(PlanType planType) {
-            this.planType = planType;
-            return this;
-        }
-
-        Builder planGrp(PlanGrp planGrp) {
-            this.planGrp = planGrp;
-            return this;
-        }
-
-
-        PlanM build() {
-            return new PlanM(this);
-        }
-    }
 }

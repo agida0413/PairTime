@@ -20,6 +20,7 @@ import java.util.List;
 @Table(name = "PLAN_EXP")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
 public class PlanExp extends BaseEntity {
 
     @Id
@@ -35,44 +36,46 @@ public class PlanExp extends BaseEntity {
     @NotNull
     private PlanM planM;
 
-    public void setPlanM(PlanM planM){
+
+    private PlanExp(PlanM planM){
         this.planM = planM;
     }
 
-    /**
-     * 연관관계 편의메소드
-     * @param planExpD
-     */
-    public void addPlanExpD(PlanExpD planExpD){
-        this.planExpDList.add(planExpD);
-        planExpD.setPlanExp(this);
-    }
+//
+//    /**
+//     * 연관관계 편의메소드
+//     * @param planExpD
+//     */
+//    public void addPlanExpD(PlanExpD planExpD){
+//        this.planExpDList.add(planExpD);
+//        planExpD.setPlanExp(this);
+//    }
+//
+//    /**
+//     * 연관관계 편의메소드
+//     * @param planExpD
+//     */
+//    public void removePlanExpD(PlanExpD planExpD){
+//        this.planExpDList.remove(planExpD);
+//        planExpD.setPlanExp(null);
+//    }
 
-    /**
-     * 연관관계 편의메소드
-     * @param planExpD
-     */
-    public void removePlanExpD(PlanExpD planExpD){
-        this.planExpDList.remove(planExpD);
-        planExpD.setPlanExp(null);
-    }
-
-    private PlanExp(Builder builder) {
-        this.planM = builder.planM;
-    }
-
-    static class Builder {
-        private PlanM planM;
-
-        Builder() {}
-
-        Builder planM(PlanM planM) {
-            this.planM = planM;
-            return this;
-        }
-
-        PlanExp build() {
-            return new PlanExp(this);
-        }
-    }
+//    private PlanExp(Builder builder) {
+//        this.planM = builder.planM;
+//    }
+//
+//    static class Builder {
+//        private PlanM planM;
+//
+//        Builder() {}
+//
+//        Builder planM(PlanM planM) {
+//            this.planM = planM;
+//            return this;
+//        }
+//
+//        PlanExp build() {
+//            return new PlanExp(this);
+//        }
+//    }
 }

@@ -3,6 +3,7 @@ package com.kyj.backend.auth.controller;
 import com.kyj.backend.auth.constants.MainUIType;
 import com.kyj.backend.auth.dto.member.request.MemberFindRequest;
 import com.kyj.backend.auth.dto.member.response.MemberFindResponse;
+import com.kyj.backend.auth.dto.planGrp.request.CreatePlanGrpRequest;
 import com.kyj.backend.auth.dto.planGrp.request.InviteRequest;
 import com.kyj.backend.auth.dto.member.response.InviteMemberResponse;
 import com.kyj.backend.auth.dto.planGrp.request.UpdatePlanGrpTempRequest;
@@ -157,6 +158,15 @@ public class AuthController {
     Long userId = Long.parseLong(SecurityContext.getUserId());
 
         planService.updatePlanGrpTempByLinkInvite(userId,updatePlanGrpTempRequest);
+
+        return ResponseEntity
+                .ok(ApiResponse.ok());
+    }
+
+    @PostMapping("/group")
+    public ResponseEntity<ApiResponse<?>> createGroup(@RequestBody CreatePlanGrpRequest createPlanGrpRequest){
+
+        planService.createPlanGrp(createPlanGrpRequest);
 
         return ResponseEntity
                 .ok(ApiResponse.ok());

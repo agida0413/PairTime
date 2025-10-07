@@ -16,12 +16,15 @@ import org.hibernate.CacheMode;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 
+import java.util.Set;
+
 /**
  * 그룹 임시생성 엔티티(초대)
  */
 @Entity
 @Table(name = "PLAN_GRP_TEMP")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Slf4j
 public class PlanGrpTemp extends BaseEntity {
@@ -56,32 +59,23 @@ public class PlanGrpTemp extends BaseEntity {
     @JoinColumn(name = "receiver_id",nullable = true)
     private Member receiver;
 
-    void setLink(String link) {
+
+    private PlanGrpTemp (String link,String receiveEmail , Member sender){
         this.link = link;
-    }
-
-    void setIsCreated(String isCreated) {
-        this.isCreated = isCreated;
-    }
-
-    void setReceiveEmail(String receiveEmail) {
         this.receiveEmail = receiveEmail;
+        this.sender = sender;
     }
 
-    public void setSender(Member member){
-        this.sender = member;
-    }
 
-    public void setReceiver(Member member){
-        this.receiver = member;
+    private PlanGrpTemp (String link,String receiveEmail , Member sender,Member receiver){
+        this.link = link;
+        this.receiveEmail = receiveEmail;
+        this.sender = sender;
+        this.receiver = receiver;
     }
-
-    public void setPlanGrp(PlanGrp planGrp){
-        this.planGrp = planGrp;
-    }
-
 
     //--------DDD-------------------
+
 
     /**
      * 이메일 전송 시 업데이트
@@ -100,75 +94,89 @@ public class PlanGrpTemp extends BaseEntity {
     }
 
     /**
-     * 그룹 생성
-     * @param planGrp
+     * 그룹임시 생성
+     * @param link
+     * @param email
+     * @param sender
+     * @return
      */
-    public void createPlanGrp(PlanGrp planGrp){
-        this.isCreated = "Y";
-        this.planGrp = planGrp;
-        planGrp.getPlanGrpTempList().add(this);
+    public static PlanGrpTemp createPlanGrpTemp(String link,String email, Member sender){
+
+        PlanGrpTemp planGrpTemp = new PlanGrpTemp(link, email, sender);
+        sender.getPlanGrpTempListByMe().add(planGrpTemp);
+
+        return planGrpTemp;
     }
 
     /**
-     * 그룹 해체
-     * @param planGrp
+     * 그룹임시 생성(리시버 포함)
+     * @param link
+     * @param email
+     * @param sender
+     * @param receiver
+     * @return
      */
-    public void removePlanGrp(PlanGrp planGrp){
-        this.planGrp =null;
-        planGrp.getPlanGrpTempList().remove(this);
+    public static PlanGrpTemp createPlanGrpTempWithReceiver(String link,String email, Member sender,Member receiver){
+
+        PlanGrpTemp planGrpTemp = new PlanGrpTemp(link, email, sender,receiver);
+        sender.getPlanGrpTempListByMe().add(planGrpTemp);
+        receiver.getPlanGrpTempListByOther().add(planGrpTemp);
+
+        return planGrpTemp;
     }
-    //DDD종료
-    private PlanGrpTemp(Builder builder) {
-        this.link = builder.link;
-        this.isCreated = builder.isCreated;
-        this.receiveEmail = builder.receiveEmail;
-        this.sender = builder.sender;
-        this.receiver = builder.receiver;
-        this.planGrp = builder.planGrp;
-    }
-
-    static class Builder {
-        private String link;
-        private String isCreated = "N";
-        private String receiveEmail;
-        private Member sender;
-        private Member receiver;
-        private PlanGrp planGrp;
-
-        Builder() {}
-
-        Builder link(String link) {
-            this.link = link;
-            return this;
-        }
-
-        Builder isCreated(String isCreated) {
-            this.isCreated = isCreated;
-            return this;
-        }
-
-        Builder receiveEmail(String receiveEmail) {
-            this.receiveEmail = receiveEmail;
-            return this;
-        }
-
-
-        Builder planGrp(PlanGrp planGrp) {
-            this.planGrp = planGrp;
-            return this;
-        }
-
-        Builder sender(Member member) {
-            this.sender = member;
-            return this;
-        }
-        Builder receiver(Member member) {
-            this.receiver = member;
-            return this;
-        }
-
-        PlanGrpTemp build() {
-            return new PlanGrpTemp(this);
-        }
-    }
+//
+//    //DDD종료
+//    private PlanGrpTemp(Builder builder) {
+//        this.link = builder.link;
+//        this.isCreated = builder.isCreated;
+//        this.receiveEmail = builder.receiveEmail;
+//        this.sender = builder.sender;
+//        this.receiver = builder.receiver;
+//        this.planGrp = builder.planGrp;
+//    }
+//
+//    static class Builder {
+//        private String link;
+//        private String isCreated = "N";
+//        private String receiveEmail;
+//        private Member sender;
+//        private Member receiver;
+//        private PlanGrp planGrp;
+//
+//        Builder() {}
+//
+//        Builder link(String link) {
+//            this.link = link;
+//            return this;
+//        }
+//
+//        Builder isCreated(String isCreated) {
+//            this.isCreated = isCreated;
+//            return this;
+//        }
+//
+//        Builder receiveEmail(String receiveEmail) {
+//            this.receiveEmail = receiveEmail;
+//            return this;
+//        }
+//
+//
+//        Builder planGrp(PlanGrp planGrp) {
+//            this.planGrp = planGrp;
+//            return this;
+//        }
+//
+//        Builder sender(Member member) {
+//            this.sender = member;
+//            return this;
+//        }
+//        Builder receiver(Member member) {
+//            this.receiver = member;
+//            return this;
+//        }
+//
+//        PlanGrpTemp build() {
+//            return new PlanGrpTemp(this);
+//        }
+//    }
 }

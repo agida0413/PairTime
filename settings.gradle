@@ -1,0 +1,5 @@
+rootProject.name = 'PairTime'
+
+include 'pair-time-backend-domain'
+include 'pair-time-backend'
+include 'pair-time-backend-auth'
