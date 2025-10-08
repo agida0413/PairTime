@@ -1,12 +1,13 @@
 # KYJ Core Library 통합 설정
 server:
   port: 8082
-
+  tomcat:
+    mbeanregistry:
+      enabled: true
 spring:
-
   # 애플리케이션 기본 설정
   application:
-    name: pair-time-backend
+    name: pair-time-backend-auth
 
   # ===== 이메일 설정 (kyj-lib-core) =====
   mail:
@@ -41,6 +42,10 @@ spring:
       ddl-auto: create
     properties:
       hibernate:
+        jdbc:
+          batch_size: 50       # 배치 사이즈 (몇 개씩 묶어서 DB 전송할지)
+          order_inserts: true      # INSERT 순서 정렬 (batch 효율 향상)
+          order_updates: true      # UPDATE 순서 정렬
         format_sql: true
         use_sql_comments: true
         dialect: org.hibernate.dialect.MySQLDialect
@@ -50,22 +55,24 @@ spring:
     host: 100.114.34.71
     port: 6380
 
-  # ===== Kafka 설정 (kyj-lib-core-kafka) =====
-  kafka:
-    bootstrap-servers: 100.114.34.71:9095,100.114.34.71:9096,100.114.34.71:9097
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    consumer:
+#  # ===== Kafka 설정 (kyj-lib-core-kafka) =====
+#  kafka:
+#    bootstrap-servers: 100.114.34.71:9095,100.114.34.71:9096,100.114.34.71:9097
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      acks: all
+#      retries: 3
+#    consumer:
 #      group-id: ${KAFKA_CONSUMER_GROUP:kyj-core-group}
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      auto-offset-reset: latest
-      enable-auto-commit: false
-    listener:
-      ack-mode: manual
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      auto-offset-reset: latest
+#      enable-auto-commit: false
+#    listener:
+#      ack-mode: manual
 
-  # ===== OAuth2 설정 (kyj-lib-core-security-auth) =====
+
 
 
 # ===== 모니터링 설정 (kyj-lib-core 포함) =====
@@ -99,24 +106,17 @@ s3:
 
 # ===== KYJ 모듈 설정 =====
 kyj:
-
   security:
     auth:
       enabled: false  # 인증 서버 모듈 활성화 (기본값: true)
       token:
         secret: asdasdsadasdassdasdsadxxadasdasdsadsadads
-        access-token-expiry: 3600000      # 1시간
+        access-token-expiry: 86400000      # 24시간(로컬)
         refresh-token-expiry: 86400000    # 24시간
     client:
       enabled: true # 클라이언트 모듈 활성화 (기본값: true)
       use-api-gateway: false  # true: API Gateway, false: JWT
       enable-blacklist: true
-      api-gateway:
-        user-id-header: "X-User-Id"
-        username-header: "X-Username"
-        email-header: "X-Email"
-        roles-header: "X-Roles"
-        token-header: "X-Token"
       static-public-endpoints:
         - /actuator
         - /health
@@ -127,13 +127,14 @@ kyj:
         - /oauth2/**
         - /login/**
         - /actuator/**
-
-
+        - /invite/link/**
 
 # ===== 로깅 설정 =====
 logging:
   level:
+    com.kyj.backend.auth: DEBUG
     org.hibernate.SQL: debug
     org.hibernate.type: trace
+    org.hibernate.orm.jdbc.bind: TRACE
 
 

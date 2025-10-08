@@ -31,23 +31,30 @@ configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 dependencies {
-    // 도메인 모듈 의존성
+
     implementation project(':pair-time-backend-domain')
 
-    // 라이브러리 의존성
+    // 기타 의존성
     implementation 'com.kyj:kyj-lib-core:0.0.1-SNAPSHOT'
-    implementation 'com.kyj:kyj-lib-core-file:0.0.1-SNAPSHOT'
-    implementation 'com.kyj:kyj-lib-core-redis:0.0.1-SNAPSHOT'
     implementation 'com.kyj:kyj-lib-core-security-client:0.0.1-SNAPSHOT'
     implementation 'com.kyj:kyj-lib-core-rdb:0.0.1-SNAPSHOT'
+    implementation 'com.kyj:kyj-lib-core-redis:0.0.1-SNAPSHOT'
+
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator' //actuator 추가
+    implementation 'io.micrometer:micrometer-registry-prometheus' //프로메테우스가 인식하는 포멧
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
-    implementation 'org.springframework.boot:spring-boot-starter-actuator' //actuator 추가
-    implementation 'io.micrometer:micrometer-registry-prometheus' //프로메테우스가 인식하는 포멧
+    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.5.7'
+
+    //Map struct
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     // Lombok
     annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"

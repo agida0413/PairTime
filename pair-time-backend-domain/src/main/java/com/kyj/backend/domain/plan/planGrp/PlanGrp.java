@@ -38,7 +38,7 @@ public class PlanGrp extends BaseEntity {
     private List<PlanGrpTemp> planGrpTempList = new ArrayList<>();
 
 
-    @OneToMany(mappedBy = "planGrp",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "planGrp",cascade = CascadeType.ALL,orphanRemoval = true)
     private List<PlanM> planMList = new ArrayList<>();
 
 
