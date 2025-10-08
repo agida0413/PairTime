@@ -40,5 +40,28 @@ public class PlanParticipant extends BaseEntity {
     private Member participant;
 
 
+    private PlanParticipant(PlanM planM,Member participant){
+        this.planM = planM;
+        this.participant = participant;
+    }
+
+
+    //---------- DDD----------
+
+    /**
+     * 일정 참가자 생성
+     * @param planM
+     * @param participant
+     * @return
+     */
+    public static PlanParticipant createPlanParticipant(PlanM planM, Member participant){
+
+        PlanParticipant planParticipant = new PlanParticipant(planM, participant);
+        planM.getPlanParticipants().add(planParticipant);
+        participant.getParticipatedList().add(planParticipant);
+
+        return planParticipant;
+    }
+
 }
 

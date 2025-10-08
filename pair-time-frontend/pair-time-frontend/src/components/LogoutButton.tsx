@@ -9,7 +9,50 @@ const LogoutButton: React.FC = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    if (!window.confirm('로그아웃 하시겠습니까?')) {
+    // 커스텀 토스트 확인 모달
+    const confirmLogout = () => new Promise<boolean>((resolve) => {
+      toast(
+        <ConfirmToastContent>
+          <ConfirmMessage>로그아웃 하시겠습니까?</ConfirmMessage>
+          <ConfirmButtons>
+            <ConfirmButton
+              onClick={() => {
+                toast.dismiss();
+                resolve(true);
+              }}
+            >
+              확인
+            </ConfirmButton>
+            <CancelButton
+              onClick={() => {
+                toast.dismiss();
+                resolve(false);
+              }}
+            >
+              취소
+            </CancelButton>
+          </ConfirmButtons>
+        </ConfirmToastContent>,
+        {
+          position: 'top-center',
+          autoClose: false,
+          closeOnClick: false,
+          closeButton: false,
+          draggable: false,
+          style: {
+            background: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
+            padding: '24px',
+            width: '360px',
+            maxWidth: '90vw',
+          },
+        }
+      );
+    });
+
+    const confirmed = await confirmLogout();
+    if (!confirmed) {
       return;
     }
 
@@ -79,5 +122,67 @@ const LogoutBtn = styled.button`
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+`;
+
+const ConfirmToastContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const ConfirmMessage = styled.div`
+  font-size: 16px;
+  font-weight: 500;
+  color: #2d3748;
+  text-align: center;
+`;
+
+const ConfirmButtons = styled.div`
+  display: flex;
+  gap: 12px;
+`;
+
+const ConfirmButton = styled.button`
+  flex: 1;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 85, 104, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const CancelButton = styled.button`
+  flex: 1;
+  padding: 12px 24px;
+  background: #f8f9fa;
+  color: #4a5568;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;

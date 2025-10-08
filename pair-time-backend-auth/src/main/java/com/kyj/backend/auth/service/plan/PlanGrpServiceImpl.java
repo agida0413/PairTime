@@ -15,6 +15,8 @@ import com.kyj.backend.domain.member.Member;
 import com.kyj.backend.domain.plan.plaGrpMember.PlanGrpMember;
 import com.kyj.backend.domain.plan.planGrp.PlanGrp;
 import com.kyj.backend.domain.plan.planGrpTemp.PlanGrpTemp;
+import com.kyj.backend.domain.plan.planM.PlanM;
+import com.kyj.backend.domain.plan.planParticipant.PlanParticipant;
 import com.kyj.core.api.CmErrCode;
 import com.kyj.core.exception.custom.KyjBizException;
 import com.kyj.core.mail.CustomMailSender;
@@ -26,6 +28,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -246,6 +250,7 @@ public class PlanGrpServiceImpl implements PlanGrpService {
     @Override
     @Transactional
     public void updatePlanGrpTempByLinkInvite(Long userId, UpdatePlanGrpTempRequest updatePlanGrpTempRequest) {
+
         if(updatePlanGrpTempRequest.getLink() == null){
             log.error("링크 정보가 없습니다.");
             throw new KyjBizException(CmErrCode.CM002);
@@ -260,14 +265,20 @@ public class PlanGrpServiceImpl implements PlanGrpService {
                     log.error("링크정보가 없습니다.");
                     return new KyjBizException(CmErrCode.CM002);
                 });
+        if (planGrpTemp.getSender().getId().equals(userId)){
+            log.error("본인이 보낸 링크는 접근할 수 없습니다. = {}, {}", userId,planGrpTemp.getSender().getId());
+            throw new KyjBizException(CmErrCode.CM001,"본인이 보낸 링크는 접근할 수 없습니다.");
 
-        Member member = memberRepository.findById(userId).orElseThrow(() -> {
+        }
+        Member receiver = memberRepository.findById(userId).orElseThrow(() -> {
             log.error("조회된 회원이 없습니다.");
             return new KyjBizException(CmErrCode.CM002);
         });
 
+
+
         //업데이트
-        planGrpTemp.updateReceiver(member);
+        planGrpTemp.updateReceiver(receiver);
 
     }
 
@@ -292,10 +303,10 @@ public class PlanGrpServiceImpl implements PlanGrpService {
         PlanGrpMember.create(planGrp,planGrpTemp.getReceiver());
         PlanGrpMember.create(planGrp,planGrpTemp.getSender());
 
+        //기념일 일정 생성
+        this.createDefaultPlanM(planGrp);
+
         planGrpRepository.save(planGrp);
-
-
-        //임시테이블 업데이트
 
 
     }
@@ -322,6 +333,44 @@ public class PlanGrpServiceImpl implements PlanGrpService {
     }
 
 //----------------------- private 메소드 영역-------------
+
+    /**
+     * 그룹 생성 시 기본 일정 생성(기념일 등 )
+     * @param planGrp
+     */
+    private void createDefaultPlanM(PlanGrp planGrp){
+
+        //  주요 일 단위 기념일
+        int[] daysList = {
+                100, 200, 300, 365,
+                500, 365 * 2, 1000,
+                365*3, 1500,
+                365 * 4 ,
+                365*5, 2000,
+                365*6,
+                365*7,
+                365*8,
+                365*9,
+                365*10
+        };
+
+        for (int day : daysList) {
+            LocalDate anniversary = planGrp.getLoveStartAt().plusDays(day);
+            PlanM anniversaryPlan = PlanM.createAnniversary(anniversary, planGrp);
+            //그룹 참여자 리스트
+            List<PlanGrpMember> planGrpMembers = planGrp.getPlanGrpMembers();
+
+            for (PlanGrpMember planGrpMember : planGrpMembers) {
+                    //계획 참여자 리스트 생성
+                    PlanParticipant.createPlanParticipant(anniversaryPlan,planGrpMember.getMember());
+            }
+        }
+
+        // 크리스마스, 발렌타인 데이 등...고도화 떄
+
+
+    }
+
 
     /**
      * 초대 링크 생성을 위한 엔티티 세팅

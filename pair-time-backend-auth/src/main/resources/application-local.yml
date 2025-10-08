@@ -39,9 +39,13 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create
     properties:
       hibernate:
+        jdbc:
+          batch_size: 50       # 배치 사이즈 (몇 개씩 묶어서 DB 전송할지)
+          order_inserts: true      # INSERT 순서 정렬 (batch 효율 향상)
+          order_updates: true      # UPDATE 순서 정렬
         format_sql: true
         use_sql_comments: true
         dialect: org.hibernate.dialect.MySQLDialect
