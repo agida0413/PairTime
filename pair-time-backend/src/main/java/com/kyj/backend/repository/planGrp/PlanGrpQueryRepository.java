@@ -1,5 +1,9 @@
 package com.kyj.backend.repository.planGrp;
 
+import com.kyj.backend.domain.plan.planGrp.PlanGrp;
+
+import java.util.Optional;
+
 /**
  *   2025-10-04
  *   @author 김용준
@@ -8,5 +12,4 @@ package com.kyj.backend.repository.planGrp;
  *
  * */
 public interface PlanGrpQueryRepository {
-
 }

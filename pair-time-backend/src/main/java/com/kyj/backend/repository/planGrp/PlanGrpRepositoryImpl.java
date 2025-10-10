@@ -1,6 +1,15 @@
 package com.kyj.backend.repository.planGrp;
 
 
+import com.kyj.backend.domain.plan.planGrp.PlanGrp;
+import com.kyj.backend.domain.plan.planGrp.QPlanGrp;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import lombok.RequiredArgsConstructor;
+
+import java.util.Optional;
+
+import static com.kyj.backend.domain.plan.planGrp.QPlanGrp.planGrp;
+
 /**
  *   2025-10-04
  *   @author 김용준
@@ -9,6 +18,5 @@ package com.kyj.backend.repository.planGrp;
  *
  * */
 public class PlanGrpRepositoryImpl implements PlanGrpQueryRepository {
-
 
 }

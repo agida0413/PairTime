@@ -1,4 +1,4 @@
-package com.kyj.backend.auth.mapper;
+package com.kyj.backend.auth.dto.mapper;
 
 import com.kyj.backend.domain.member.dto.DomainMemberDTO;
 import com.kyj.core.security.auth.dto.AuthMemberDTO;

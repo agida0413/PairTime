@@ -1,6 +1,5 @@
 package com.kyj.backend.domain.plan.planM;
 
-import com.kyj.backend.domain.member.Member;
 import com.kyj.backend.domain.plan.planExp.PlanExp;
 import com.kyj.backend.domain.plan.planGrp.PlanGrp;
 import com.kyj.backend.domain.plan.planParticipant.PlanParticipant;
@@ -11,7 +10,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,7 +24,6 @@ import java.util.List;import jakarta.persistence.*;
 @Entity
 @Table(name = "PLAN_M")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlanM extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -66,11 +63,15 @@ public class PlanM extends BaseEntity {
     private PlanType planType;
 
     /** 조회용 가상컬럼
-     * ALTER TABLE PLAN_M
-     * ADD COLUMN start_ym VARCHAR(7)
-     *     AS (DATE_FORMAT(start_at, '%Y-%m')) STORED,
-     * ADD COLUMN start_ymd VARCHAR(10)
-     *     AS (DATE_FORMAT(start_at, '%Y-%m-%d')) STORED;
+     DROP COLUMN start_ym,
+     DROP COLUMN start_ymd;
+
+     ALTER TABLE PLAN_M
+     ADD COLUMN start_ym VARCHAR(7)
+     AS (DATE_FORMAT(start_at, '%Y-%m')) STORED,
+     ADD COLUMN start_ymd VARCHAR(10)
+     AS (DATE_FORMAT(start_at, '%Y-%m-%d')) STORED;
+
      */
 
     @Column(name = "start_ym", insertable = false, updatable = false)
@@ -97,7 +98,8 @@ public class PlanM extends BaseEntity {
     private List<PlanParticipant> planParticipants = new ArrayList<>();
 
 
-    private PlanM(String title,String content,String alarmYn,String fullYn,LocalDateTime startAt,LocalDateTime endAt
+    private PlanM(String title, String content, String alarmYn, String fullYn,
+                  LocalDateTime startAt,LocalDateTime endAt
                  , PlanType planType,PlanGrp planGrp)
     {
         this.title =title;
@@ -111,6 +113,22 @@ public class PlanM extends BaseEntity {
     }
 
 // ---DDD-------------
+
+    /**
+     * 새로운 일정 생성
+     * @param
+     * @return
+     */
+    public static PlanM createPlanM(String title,String content,String alarmYn,String fullYn,
+                                    LocalDateTime startAt, LocalDateTime endAt, PlanType planType,
+                                    PlanGrp planGrp){
+        PlanM planM = new PlanM(title, content, alarmYn, fullYn, startAt,endAt, planType, planGrp);
+
+        planGrp.getPlanMList().add(planM);
+
+        return planM;
+    }
+
 
     /**
      * 기념일 일정 생성

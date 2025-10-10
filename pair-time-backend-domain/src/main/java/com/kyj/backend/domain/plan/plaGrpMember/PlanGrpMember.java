@@ -16,7 +16,6 @@ import lombok.Setter;
  */
 @Entity
 @Getter
-@Setter
 @Table(name = "PLAN_GRP_MEMBER",
         uniqueConstraints = @UniqueConstraint(
                 name = "UK_PLAN_GRP_MEMBER",

@@ -1,8 +1,8 @@
 package com.kyj.backend.auth.service.member;
 
 import com.kyj.backend.auth.constants.AuthErrCode;
-import com.kyj.backend.auth.mapper.DtoTODomainDtoMapper;
-import com.kyj.backend.auth.mapper.MemberEntityDTOMapper;
+import com.kyj.backend.auth.dto.mapper.DtoTODomainDtoMapper;
+import com.kyj.backend.auth.dto.mapper.MemberEntityDTOMapper;
 import com.kyj.backend.auth.repository.member.MemberRepository;
 
 import com.kyj.backend.domain.member.Member;
@@ -16,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 /**
  * 2025-10-03

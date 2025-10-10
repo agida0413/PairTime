@@ -1,4 +1,4 @@
-package com.kyj.backend.auth.mapper;
+package com.kyj.backend.auth.dto.mapper;
 
 import com.kyj.backend.auth.dto.member.response.MemberFindResponse;
 import com.kyj.backend.auth.dto.member.response.InviteMemberResponse;

@@ -24,7 +24,6 @@ import java.util.List;
 @Table(name = "MEMBER")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Setter
 public class Member extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

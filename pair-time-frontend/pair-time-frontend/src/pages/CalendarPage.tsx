@@ -6,6 +6,26 @@ import { Plan, PlanType } from '../types/calendar';
 import { toast } from 'react-toastify';
 
 const CalendarPage: React.FC = () => {
+  // 기본 시간 계산 함수
+  const getDefaultTimes = () => {
+    const now = new Date();
+    const startDate = new Date(now.getTime() + 30 * 60000); // 현재 시간 + 30분
+    const endDate = new Date(startDate.getTime() + 60 * 60000); // 시작 시간 + 1시간
+
+    const formatTime = (date: Date) => {
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    };
+
+    return {
+      startTime: formatTime(startDate),
+      endTime: formatTime(endDate)
+    };
+  };
+
+  const defaultTimes = getDefaultTimes();
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [selectedDateForExpense, setSelectedDateForExpense] = useState<Date | null>(null);
@@ -16,8 +36,8 @@ const CalendarPage: React.FC = () => {
   const [showAddPlanModal, setShowAddPlanModal] = useState(false);
   const [showDailyExpenseModal, setShowDailyExpenseModal] = useState(false);
   const [isAllDay, setIsAllDay] = useState(false);
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('10:00');
+  const [startTime, setStartTime] = useState(defaultTimes.startTime);
+  const [endTime, setEndTime] = useState(defaultTimes.endTime);
   const [selectedPlanType, setSelectedPlanType] = useState<PlanType>(PlanType.SOLO_ME);
 
   const getDaysInMonth = (date: Date) => {
@@ -150,14 +170,23 @@ const CalendarPage: React.FC = () => {
     toast.success('지출 정보가 등록되었습니다! 💰');
   };
 
+  const resetPlanForm = () => {
+    const newDefaultTimes = getDefaultTimes();
+    setIsAllDay(false);
+    setStartTime(newDefaultTimes.startTime);
+    setEndTime(newDefaultTimes.endTime);
+    setSelectedPlanType(PlanType.SOLO_ME);
+  };
+
   const handleAddPlan = () => {
     setShowAddPlanModal(false);
     toast.success('일정이 등록되었습니다! 📅');
-    // Reset form
-    setIsAllDay(false);
-    setStartTime('09:00');
-    setEndTime('10:00');
-    setSelectedPlanType(PlanType.SOLO_ME);
+    resetPlanForm();
+  };
+
+  const handleClosePlanModal = () => {
+    setShowAddPlanModal(false);
+    resetPlanForm();
   };
 
   const handleAllDayChange = (checked: boolean) => {
@@ -170,9 +199,14 @@ const CalendarPage: React.FC = () => {
 
   const handleStartTimeChange = (time: string) => {
     setStartTime(time);
-    // 종료 시간이 시작 시간보다 빠르면 종료 시간을 시작 시간으로 설정
+    // 종료 시간이 시작 시간보다 빠르면 종료 시간을 시작 시간 + 1시간으로 설정
     if (time > endTime) {
-      setEndTime(time);
+      const [hours, minutes] = time.split(':').map(Number);
+      const newEndDate = new Date();
+      newEndDate.setHours(hours, minutes);
+      newEndDate.setTime(newEndDate.getTime() + 60 * 60000); // +1시간
+      const newEndTime = `${String(newEndDate.getHours()).padStart(2, '0')}:${String(newEndDate.getMinutes()).padStart(2, '0')}`;
+      setEndTime(newEndTime);
     }
   };
 
@@ -184,6 +218,7 @@ const CalendarPage: React.FC = () => {
       toast.error('종료 시간은 시작 시간보다 빠를 수 없습니다.');
     }
   };
+
 
   const handleEditPlan = (plan: Plan) => {
     toast.success('일정이 수정되었습니다! ✏️');
@@ -235,13 +270,16 @@ const CalendarPage: React.FC = () => {
       dayDate.setHours(0, 0, 0, 0);
       const isPastDate = dayDate < today;
 
+      // 요일 계산 (0: 일요일, 6: 토요일)
+      const dayOfWeek = dayDate.getDay();
+
       const plansForDay = getPlansForDate(day);
       const totalExpense = getTotalExpenseForDate(day);
 
       days.push(
         <DayCell key={day} isSelected={isSelected} isPastDate={isPastDate} onClick={() => handleDayClick(day)}>
           <DayHeader>
-            <DayNumber isToday={isToday} isSelected={isSelected}>{day}</DayNumber>
+            <DayNumber isToday={isToday} isSelected={isSelected} dayOfWeek={dayOfWeek}>{day}</DayNumber>
             {totalExpense > 0 && (
               <DayExpense onClick={(e) => handleExpenseClick(e, day)}>
                 💰 {totalExpense.toLocaleString()}
@@ -317,13 +355,13 @@ const CalendarPage: React.FC = () => {
           </CalendarHeader>
 
           <CalendarGrid>
-            <WeekDayHeader>일</WeekDayHeader>
-            <WeekDayHeader>월</WeekDayHeader>
-            <WeekDayHeader>화</WeekDayHeader>
-            <WeekDayHeader>수</WeekDayHeader>
-            <WeekDayHeader>목</WeekDayHeader>
-            <WeekDayHeader>금</WeekDayHeader>
-            <WeekDayHeader>토</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={0}>일</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={1}>월</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={2}>화</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={3}>수</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={4}>목</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={5}>금</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={6}>토</WeekDayHeader>
             {renderDays()}
           </CalendarGrid>
 
@@ -635,11 +673,11 @@ const CalendarPage: React.FC = () => {
 
       {/* 일정 추가 모달 */}
       {showAddPlanModal && (
-        <ModalOverlay onClick={() => setShowAddPlanModal(false)}>
+        <ModalOverlay onClick={handleClosePlanModal}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <ModalTitle>📅 일정 추가하기</ModalTitle>
-              <CloseButton onClick={() => setShowAddPlanModal(false)}>✕</CloseButton>
+              <CloseButton onClick={handleClosePlanModal}>✕</CloseButton>
             </ModalHeader>
             <ModalBody>
               {selectedDateForPlan && (
@@ -730,6 +768,7 @@ const CalendarPage: React.FC = () => {
                     <TimePickerInput
                       type="time"
                       value={endTime}
+                      min={startTime}
                       onChange={(e) => handleEndTimeChange(e.target.value)}
                       disabled={isAllDay}
                     />
@@ -744,7 +783,7 @@ const CalendarPage: React.FC = () => {
               </InputGroup>
             </ModalBody>
             <ModalFooter>
-              <CancelButton onClick={() => setShowAddPlanModal(false)}>취소</CancelButton>
+              <CancelButton onClick={handleClosePlanModal}>취소</CancelButton>
               <ConfirmButton onClick={handleAddPlan}>등록하기</ConfirmButton>
             </ModalFooter>
           </ModalContent>
@@ -1012,11 +1051,21 @@ const CalendarGrid = styled.div`
   margin-bottom: 24px;
 `;
 
-const WeekDayHeader = styled.div`
+interface WeekDayHeaderProps {
+  dayOfWeek?: number;
+}
+
+const WeekDayHeader = styled.div<WeekDayHeaderProps>`
   text-align: center;
   font-size: 14px;
   font-weight: 600;
-  color: #666;
+  color: ${(props) =>
+    props.dayOfWeek === 0
+      ? '#ff4444'
+      : props.dayOfWeek === 6
+      ? '#4444ff'
+      : '#666'
+  };
   padding: 12px 0;
 `;
 
@@ -1079,12 +1128,19 @@ const DayHeader = styled.div`
 interface DayNumberProps {
   isToday?: boolean;
   isSelected?: boolean;
+  dayOfWeek?: number;
 }
 
 const DayNumber = styled.div<DayNumberProps>`
   font-size: 14px;
   font-weight: ${(props) => (props.isToday || props.isSelected ? '700' : '500')};
-  color: ${(props) => (props.isSelected ? '#1a73e8' : props.isToday ? '#4a9eff' : '#333')};
+  color: ${(props) => {
+    if (props.isSelected) return '#1a73e8';
+    if (props.isToday) return '#4a9eff';
+    if (props.dayOfWeek === 0) return '#ff4444';
+    if (props.dayOfWeek === 6) return '#4444ff';
+    return '#333';
+  }};
 `;
 
 const DayExpense = styled.div`
