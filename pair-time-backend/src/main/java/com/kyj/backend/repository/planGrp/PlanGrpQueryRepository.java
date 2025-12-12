@@ -12,4 +12,5 @@ import java.util.Optional;
  *
  * */
 public interface PlanGrpQueryRepository {
+    public Optional<PlanGrp> findPlanGrpToCreateNewPlan(Long planGrpId);
 }

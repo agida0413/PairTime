@@ -1,7 +1,12 @@
 package com.kyj.backend.service.plan;
 
+import com.kyj.backend.dto.plan.request.CreateNewPlanExpDTO;
 import com.kyj.backend.dto.plan.request.CreateNewPlanMRequest;
+import com.kyj.backend.dto.plan.request.FindCalenderInfoDTO;
+import com.kyj.backend.dto.plan.response.FindCalendarInfoResDTO;
 import com.kyj.backend.dto.plan.response.MainInfoResponse;
+
+import java.util.List;
 
 /**
  * 2025-10-08
@@ -11,4 +16,7 @@ import com.kyj.backend.dto.plan.response.MainInfoResponse;
 public interface PlanService {
     public void createNewPlanM(CreateNewPlanMRequest createNewPlanMRequest);
     public MainInfoResponse findMainInfo(Long userId);
+
+    public void createPlanExp(CreateNewPlanExpDTO createNewPlanExpDTO);
+    public List<FindCalendarInfoResDTO> findCalendarInfoByYm(FindCalenderInfoDTO findCalenderInfoDTO);
 }

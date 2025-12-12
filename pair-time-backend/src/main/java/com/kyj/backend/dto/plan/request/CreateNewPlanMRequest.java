@@ -58,7 +58,7 @@ public class CreateNewPlanMRequest {
      * 시작 일시 (현재 시간 이상)
      */
     @NotNull(message = "시작 일시는 필수입니다.")
-    @FutureOrPresent(message = "시작 일시는 현재 시간 이상이어야 합니다.")
+//    @FutureOrPresent(message = "시작 일시는 현재 시간 이상이어야 합니다.")
     private LocalDateTime startAt;
 
     /**

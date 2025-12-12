@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @author 김용준
  * JPA PlanM 리파지토리
  */
-public interface PlanMRepository extends JpaRepository<PlanM,Long> {
+public interface PlanMRepository extends JpaRepository<PlanM,Long>,PlanMQueryRepository {
 }

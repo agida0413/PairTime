@@ -6,7 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { GlobalStyles, theme } from './styles/GlobalStyles';
 import { useAppDispatch } from './hooks/useAppDispatch';
 import { useAppSelector } from './hooks/useAppSelector';
-import { fetchMainUIType } from './features/auth/authSlice';
+import { fetchMainUIType, fetchMainInfo } from './features/auth/authSlice';
 import { MainUIType } from './types';
 
 // Pages
@@ -25,6 +25,7 @@ const AuthInitializer: React.FC = () => {
   const { mainUIType, loading, error } = useAppSelector((state) => state.auth);
   const hasAttemptedFetch = useRef(false);
   const hasRedirectedToLogin = useRef(false);
+  const hasCalledMainInfo = useRef(false);
 
   // mainUIType 가져오기 (로그인 페이지 제외, mainUIType이 null이면 호출)
   useEffect(() => {
@@ -79,7 +80,7 @@ const AuthInitializer: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error, loading, location.pathname]);
 
-  // mainUIType이 업데이트되면 적절한 페이지로 리다이렉트
+  // mainUIType이 업데이트되면 적절한 페이지로 리다이렉트 및 mainInfo 조회
   useEffect(() => {
     // 초대 링크 페이지에서는 완전히 무시
     const currentPath = location.pathname;
@@ -94,6 +95,13 @@ const AuthInitializer: React.FC = () => {
     }
 
     console.log('✅ [AuthInitializer] MainUIType:', mainUIType, 'Current path:', currentPath);
+
+    // CALENDAR 타입이면 mainInfo 조회 (한 번만)
+    if (mainUIType === MainUIType.CALENDAR && !hasCalledMainInfo.current) {
+      console.log('📡 [AuthInitializer] Fetching mainInfo for CALENDAR type...');
+      hasCalledMainInfo.current = true;
+      dispatch(fetchMainInfo());
+    }
 
     switch (mainUIType) {
       case MainUIType.CALENDAR:

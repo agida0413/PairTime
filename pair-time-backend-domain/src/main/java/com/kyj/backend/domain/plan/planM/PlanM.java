@@ -1,5 +1,6 @@
 package com.kyj.backend.domain.plan.planM;
 
+import com.kyj.backend.domain.plan.plaGrpMember.PlanGrpMember;
 import com.kyj.backend.domain.plan.planExp.PlanExp;
 import com.kyj.backend.domain.plan.planGrp.PlanGrp;
 import com.kyj.backend.domain.plan.planParticipant.PlanParticipant;
@@ -63,10 +64,9 @@ public class PlanM extends BaseEntity {
     private PlanType planType;
 
     /** 조회용 가상컬럼
-     DROP COLUMN start_ym,
-     DROP COLUMN start_ymd;
-
      ALTER TABLE PLAN_M
+     DROP COLUMN start_ym,
+     DROP COLUMN start_ymd,
      ADD COLUMN start_ym VARCHAR(7)
      AS (DATE_FORMAT(start_at, '%Y-%m')) STORED,
      ADD COLUMN start_ymd VARCHAR(10)
@@ -121,10 +121,24 @@ public class PlanM extends BaseEntity {
      */
     public static PlanM createPlanM(String title,String content,String alarmYn,String fullYn,
                                     LocalDateTime startAt, LocalDateTime endAt, PlanType planType,
-                                    PlanGrp planGrp){
+                                    PlanGrp planGrp,Long userId){
+
         PlanM planM = new PlanM(title, content, alarmYn, fullYn, startAt,endAt, planType, planGrp);
 
         planGrp.getPlanMList().add(planM);
+
+        List<PlanGrpMember> planGrpMembers = planGrp.getPlanGrpMembers();
+
+        for (PlanGrpMember planGrpMember : planGrpMembers) {
+            if (planType == PlanType.SOLO){
+                if (!planGrpMember.getMember().getId().equals(userId)){
+                    continue;
+                }
+            }
+
+            PlanParticipant.createPlanParticipant(planM,planGrpMember.getMember());
+
+        }
 
         return planM;
     }
@@ -165,6 +179,11 @@ public class PlanM extends BaseEntity {
         planGrp.getPlanMList().add(planM);
 
         return planM;
+    }
+
+    public void addPlanExp(PlanExp planExp){
+        this.planExpList.add(planExp);
+        planExp.setPlanM(this);
     }
 
 //    /**
