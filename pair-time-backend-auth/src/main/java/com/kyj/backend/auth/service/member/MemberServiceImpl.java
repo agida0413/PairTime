@@ -4,9 +4,8 @@ import com.kyj.backend.auth.constants.MainUIType;
 import com.kyj.backend.auth.dto.member.request.MemberFindRequest;
 import com.kyj.backend.auth.dto.member.response.MemberFindResponse;
 import com.kyj.backend.auth.dto.member.response.InviteMemberResponse;
-import com.kyj.backend.auth.mapper.MemberEntityDTOMapper;
+import com.kyj.backend.auth.dto.mapper.MemberEntityDTOMapper;
 import com.kyj.backend.auth.repository.member.MemberRepository;
-import com.kyj.backend.auth.repository.planGrpTemp.PlanGrpTempRepository;
 import com.kyj.backend.domain.member.Member;
 import com.kyj.core.api.CmErrCode;
 import com.kyj.core.exception.custom.KyjBizException;
@@ -14,8 +13,6 @@ import com.kyj.core.security.client.util.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 /**
  * 2025-10-03

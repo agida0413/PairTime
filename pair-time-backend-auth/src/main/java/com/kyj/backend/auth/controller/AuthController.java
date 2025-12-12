@@ -13,6 +13,7 @@ import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
 import com.kyj.backend.auth.service.member.MemberService;
 import com.kyj.backend.auth.service.plan.PlanGrpService;
 import com.kyj.core.api.ApiResponse;
+import com.kyj.core.security.client.annotation.PublicEndpoint;
 import com.kyj.core.security.client.util.SecurityContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -168,7 +169,10 @@ public class AuthController {
      * @param createPlanGrpRequest
      * @return
      */
-    @PostMapping("/group")
+    @PostMapping(value = "/group"
+            , consumes = MediaType.APPLICATION_JSON_VALUE
+            , produces = MediaType.APPLICATION_JSON_VALUE
+    )
     public ResponseEntity<ApiResponse<?>> createGroup(@RequestBody CreatePlanGrpRequest createPlanGrpRequest){
 
         planService.createPlanGrp(createPlanGrpRequest);

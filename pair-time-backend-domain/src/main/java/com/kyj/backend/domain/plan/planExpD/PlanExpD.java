@@ -44,6 +44,11 @@ public class PlanExpD extends BaseEntity {
         this.planExp = planExp;
     }
 
+    public static PlanExpD createPlanExpD(BigDecimal expenditure,String title,PlanExp planExp){
+        PlanExpD planExpD = new PlanExpD(expenditure,title,planExp);
+        return  planExpD;
+    }
+
 
 //
 //    private PlanExpD(Builder builder) {

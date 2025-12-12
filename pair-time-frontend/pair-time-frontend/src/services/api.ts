@@ -6,7 +6,7 @@ import axios, { AxiosInstance } from 'axios';
 export const OAUTH2_BASE_URL = process.env.REACT_APP_OAUTH2_URL || '';
 
 // API Base URL
-// development: 빈 문자열 (프록시 사용, Same-Origin)
+// development: 빈 문자열 (setupProxy.js를 통해 80포트로 프록시)
 // production: 실제 서버 URL
 export const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 

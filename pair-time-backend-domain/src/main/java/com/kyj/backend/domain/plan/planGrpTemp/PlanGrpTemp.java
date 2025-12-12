@@ -24,7 +24,6 @@ import java.util.Set;
 @Entity
 @Table(name = "PLAN_GRP_TEMP")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Slf4j
 public class PlanGrpTemp extends BaseEntity {
@@ -91,6 +90,32 @@ public class PlanGrpTemp extends BaseEntity {
      */
     public void updateReceiver(Member receiver){
         this.receiver = receiver;
+    }
+
+    /**
+     * PlanGrp과 연관관계 설정
+     * 도메인 로직에서만 사용, 외부 서비스에서 직접 호출 금지
+     * @param planGrp
+     */
+    public void associateWithPlanGrp(PlanGrp planGrp) {
+        this.planGrp = planGrp;
+        this.isCreated = "Y";
+    }
+
+    /**
+     * PlanGrp과 연관관계 해제
+     * 도메인 로직에서만 사용, 외부 서비스에서 직접 호출 금지
+     */
+    public void dissociateFromPlanGrp() {
+        this.planGrp = null;
+    }
+
+    /**
+     * Sender 연관관계 해제
+     * 초대 거절 시에만 사용
+     */
+    public void clearSenderRelation() {
+        this.sender = null;
     }
 
     /**

@@ -38,9 +38,26 @@ public class PlanExp extends BaseEntity {
 
 
     private PlanExp(PlanM planM){
-        this.planM = planM;
+        planM.addPlanExp(this);
     }
 
+    /**
+     * 지출 마스터 생성
+     */
+    public static PlanExp createPlanExp(PlanM planM){
+        PlanExp planExp = new PlanExp(planM);
+
+        return planExp;
+    }
+
+    /**
+     * 지출상세 추가
+     * @param planExpD
+     */
+    public void addPlanExpD(PlanExpD planExpD){
+        this.planExpDList.add(planExpD);
+        planExpD.setPlanExp(this);
+    }
 //
 //    /**
 //     * 연관관계 편의메소드

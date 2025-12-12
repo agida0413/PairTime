@@ -65,6 +65,63 @@ export interface InviteRequest {
   prevPlanGrpTempId?: number;  // 삭제할 기존 임시 그룹 ID
 }
 
+// Main Info Response - 캘린더 메인 정보
+export interface MainInfoResponse {
+  planGrpId: number;
+  profile: string;
+  nickname: string;
+  opponentNickname: string;
+  opponentProfile: string;
+  loveDday: number;
+}
+
+// Create Plan Request - 일정 추가 요청
+export interface CreatePlanRequest {
+  planType: 'COUPLE' | 'SOLO';  // 일정 타입
+  title: string;
+  content: string;
+  fullYn: 'Y' | 'N';  // 하루종일 여부
+  alarmYn: 'Y' | 'N';  // 알람 여부
+  startAt: string;  // ISO 8601 형식 (YYYY-MM-DDTHH:mm:ss)
+  endAt: string;  // ISO 8601 형식 (YYYY-MM-DDTHH:mm:ss)
+  planGrpId: number;
+}
+
+// Calendar Info Request - 달력 정보 조회 요청
+export interface FindCalendarInfoRequest {
+  targetYm: string;  // YYYY-MM 형식
+  usrId: number;
+}
+
+// Calendar UI Type - 달력에서 구분하는 일정 타입
+export enum PlanCalendarUIType {
+  MY = 'MY',
+  OPPOSITE = 'OPPOSITE',
+  COUPLE = 'COUPLE'
+}
+
+// Calendar Info Response - 달력 정보 조회 응답
+export interface FindCalendarInfoResponse {
+  planCalendarUIType: PlanCalendarUIType;
+  planId: number;
+  title: string;
+  content: string;
+  alarmYn: string;
+  fullYn: string;
+  startAt: string;  // ISO 8601 형식
+  endAt: string;    // ISO 8601 형식
+  planType: 'COUPLE' | 'SOLO';
+  startYm: string;  // YYYY-MM 형식
+  startYmd: string; // YYYY-MM-DD 형식
+}
+
+// Create Plan Expense Request - 지출 정보 등록 요청
+export interface CreatePlanExpRequest {
+  title: string;        // 지출제목 (필수)
+  expenditure: number;  // 지출금액 (최소 100)
+  planId: number;       // 일정 고유번호 (최소 1)
+}
+
 // Auth Types
 export interface AuthState {
   isAuthenticated: boolean;
@@ -72,6 +129,7 @@ export interface AuthState {
   token: string | null;
   mainUIType: MainUIType | null;
   planGrpTempId: number | null;
+  mainInfo: MainInfoResponse | null;
   loading: boolean;
   error: string | null;
 }

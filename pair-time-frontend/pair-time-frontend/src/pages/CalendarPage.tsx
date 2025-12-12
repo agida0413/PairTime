@@ -1,11 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { LogoutButton } from '../components';
-import { mockPlans } from '../mocks/calendarData';
 import { Plan, PlanType } from '../types/calendar';
+import { FindCalendarInfoResponse, PlanCalendarUIType } from '../types';
 import { toast } from 'react-toastify';
+import { useAppSelector } from '../hooks/useAppSelector';
+import { useAppDispatch } from '../hooks/useAppDispatch';
+import { createPlan, fetchCalendarInfo, createPlanExp } from '../features/auth/authSlice';
 
 const CalendarPage: React.FC = () => {
+  const dispatch = useAppDispatch();
+
+  // Redux에서 mainInfo 가져오기
+  const { mainInfo } = useAppSelector((state) => state.auth);
+
+  // 달력 일정 데이터 상태 (기존 Plan 타입 유지)
+  const [calendarPlans, setCalendarPlans] = useState<Plan[]>([]);
+
+  // 기본 시간 계산 함수
+  const getDefaultTimes = () => {
+    const now = new Date();
+    const startDate = new Date(now.getTime() + 30 * 60000); // 현재 시간 + 30분
+    const endDate = new Date(startDate.getTime() + 60 * 60000); // 시작 시간 + 1시간
+
+    const formatTime = (date: Date) => {
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    };
+
+    return {
+      startTime: formatTime(startDate),
+      endTime: formatTime(endDate)
+    };
+  };
+
+  const defaultTimes = getDefaultTimes();
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [selectedDateForExpense, setSelectedDateForExpense] = useState<Date | null>(null);
@@ -16,9 +47,17 @@ const CalendarPage: React.FC = () => {
   const [showAddPlanModal, setShowAddPlanModal] = useState(false);
   const [showDailyExpenseModal, setShowDailyExpenseModal] = useState(false);
   const [isAllDay, setIsAllDay] = useState(false);
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('10:00');
+  const [startTime, setStartTime] = useState(defaultTimes.startTime);
+  const [endTime, setEndTime] = useState(defaultTimes.endTime);
   const [selectedPlanType, setSelectedPlanType] = useState<PlanType>(PlanType.SOLO_ME);
+  const [planTitle, setPlanTitle] = useState('');
+  const [planContent, setPlanContent] = useState('');
+  const [hasAlarm, setHasAlarm] = useState(false);
+
+  // 지출 등록 관련 상태
+  const [expenseTitle, setExpenseTitle] = useState('');
+  const [expenseAmount, setExpenseAmount] = useState('');
+  const [selectedPlanForExpense, setSelectedPlanForExpense] = useState<Plan | null>(null);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -32,6 +71,74 @@ const CalendarPage: React.FC = () => {
   };
 
   const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentDate);
+
+  // API 응답을 Plan 타입으로 변환하는 헬퍼 함수
+  const convertToPlan = useCallback((apiPlan: FindCalendarInfoResponse): Plan => {
+    // PlanCalendarUIType을 PlanType enum으로 매핑
+    let planType: PlanType;
+    switch (apiPlan.planCalendarUIType) {
+      case PlanCalendarUIType.MY:
+        planType = PlanType.SOLO_ME;
+        break;
+      case PlanCalendarUIType.OPPOSITE:
+        planType = PlanType.SOLO_OPPONENT;
+        break;
+      case PlanCalendarUIType.COUPLE:
+        planType = PlanType.COUPLE;
+        break;
+      default:
+        planType = PlanType.SOLO_ME;
+    }
+
+    return {
+      id: apiPlan.planId,
+      title: apiPlan.title,
+      content: apiPlan.content,
+      startAt: apiPlan.startAt,
+      endAt: apiPlan.endAt,
+      planType: planType,
+      opponentNickname: mainInfo?.opponentNickname,
+      authorName: mainInfo?.nickname || '',
+      createdAt: apiPlan.startAt,
+      planPosts: [], // 추후 별도 API로 조회 필요
+      planExps: [],  // 추후 별도 API로 조회 필요
+      planReviews: [], // 추후 별도 API로 조회 필요
+    };
+  }, [mainInfo]);
+
+  // 달력 정보 조회 (currentDate 변경 시)
+  useEffect(() => {
+    const loadCalendarInfo = async () => {
+      if (!mainInfo?.planGrpId) {
+        console.log('⚠️ planGrpId가 없어서 달력 정보를 조회하지 않습니다');
+        return;
+      }
+
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const targetYm = `${year}-${month}`;
+
+      // 로컬 스토리지에서 userId 가져오기 (임시)
+      // TODO: Redux에서 userId 관리하도록 수정 필요
+      const userId = 1; // 임시로 1 사용
+
+      console.log('📅 Loading calendar info for:', targetYm);
+
+      const result = await dispatch(fetchCalendarInfo({
+        targetYm,
+        usrId: userId,
+      }));
+
+      if (fetchCalendarInfo.fulfilled.match(result)) {
+        // API 응답을 Plan 타입으로 변환
+        const plans = result.payload.map(convertToPlan);
+        setCalendarPlans(plans);
+        console.log('✅ Calendar plans loaded:', plans);
+      }
+    };
+
+    loadCalendarInfo();
+  }, [currentDate, mainInfo, dispatch, convertToPlan]);
 
   const previousMonth = () => {
     const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
@@ -65,7 +172,9 @@ const CalendarPage: React.FC = () => {
 
   const getPlansForDate = (day: number): Plan[] => {
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return mockPlans.filter(plan => plan.startAt.startsWith(dateStr));
+    return calendarPlans
+      .filter(plan => plan.startAt.startsWith(dateStr))
+      .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()); // 시간 빠른 순 정렬
   };
 
   const getTotalExpenseForDate = (day: number): number => {
@@ -145,19 +254,170 @@ const CalendarPage: React.FC = () => {
     toast.success('추억이 등록되었습니다! 📸');
   };
 
-  const handleAddExpense = () => {
-    setShowAddExpenseModal(false);
-    toast.success('지출 정보가 등록되었습니다! 💰');
+  const handleAddExpense = async () => {
+    // 필수 값 검증
+    if (!expenseTitle.trim()) {
+      toast.error('지출 항목을 입력해주세요');
+      return;
+    }
+    if (!expenseAmount || parseFloat(expenseAmount) < 100) {
+      toast.error('지출 금액은 100원 이상이어야 합니다');
+      return;
+    }
+    if (!selectedPlanForExpense) {
+      toast.error('지출을 등록할 일정을 선택해주세요');
+      return;
+    }
+
+    const expenseRequest = {
+      title: expenseTitle.trim(),
+      expenditure: parseFloat(expenseAmount),
+      planId: selectedPlanForExpense.id,
+    };
+
+    console.log('📤 Sending expense request:', expenseRequest);
+
+    const result = await dispatch(createPlanExp(expenseRequest));
+
+    if (createPlanExp.fulfilled.match(result)) {
+      setShowAddExpenseModal(false);
+      setExpenseTitle('');
+      setExpenseAmount('');
+      setSelectedPlanForExpense(null);
+
+      // 지출 등록 후 달력 정보 다시 조회
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const targetYm = `${year}-${month}`;
+      const userId = 1; // 임시 사용
+
+      const calendarResult = await dispatch(fetchCalendarInfo({
+        targetYm,
+        usrId: userId,
+      }));
+
+      if (fetchCalendarInfo.fulfilled.match(calendarResult)) {
+        // API 응답을 Plan 타입으로 변환
+        const plans = calendarResult.payload.map(convertToPlan);
+        setCalendarPlans(plans);
+        console.log('✅ Calendar refreshed after creating expense');
+      }
+    }
   };
 
-  const handleAddPlan = () => {
-    setShowAddPlanModal(false);
-    toast.success('일정이 등록되었습니다! 📅');
-    // Reset form
+  const resetExpenseForm = () => {
+    setExpenseTitle('');
+    setExpenseAmount('');
+    setSelectedPlanForExpense(null);
+  };
+
+  const handleOpenExpenseModal = (plan: Plan) => {
+    setSelectedPlanForExpense(plan);
+    setShowAddExpenseModal(true);
+  };
+
+  const handleCloseExpenseModal = () => {
+    setShowAddExpenseModal(false);
+    resetExpenseForm();
+  };
+
+  const resetPlanForm = () => {
+    const newDefaultTimes = getDefaultTimes();
     setIsAllDay(false);
-    setStartTime('09:00');
-    setEndTime('10:00');
+    setStartTime(newDefaultTimes.startTime);
+    setEndTime(newDefaultTimes.endTime);
     setSelectedPlanType(PlanType.SOLO_ME);
+    setPlanTitle('');
+    setPlanContent('');
+    setHasAlarm(false);
+  };
+
+  const handleAddPlan = async () => {
+    // 필수 값 검증
+    if (!planTitle.trim()) {
+      toast.error('제목을 입력해주세요');
+      return;
+    }
+    if (!planContent.trim()) {
+      toast.error('내용을 입력해주세요');
+      return;
+    }
+    if (!mainInfo?.planGrpId) {
+      toast.error('planGrpId를 찾을 수 없습니다');
+      return;
+    }
+    if (!selectedDateForPlan) {
+      toast.error('날짜를 선택해주세요');
+      return;
+    }
+
+    // 시작/종료 날짜 생성
+    const year = selectedDateForPlan.getFullYear();
+    const month = selectedDateForPlan.getMonth();
+    const day = selectedDateForPlan.getDate();
+
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+
+    const startAt = new Date(year, month, day, startHour, startMinute);
+    const endAt = new Date(year, month, day, endHour, endMinute);
+
+    // ISO 8601 형식으로 변환 (YYYY-MM-DDTHH:mm:ss)
+    const formatDateTime = (date: Date) => {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      const hh = String(date.getHours()).padStart(2, '0');
+      const min = String(date.getMinutes()).padStart(2, '0');
+      const ss = '00';
+      return `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`;
+    };
+
+    // PlanType 매핑: SOLO_ME | COUPLE -> SOLO | COUPLE
+    const backendPlanType: 'COUPLE' | 'SOLO' = selectedPlanType === PlanType.COUPLE ? 'COUPLE' : 'SOLO';
+
+    const planRequest = {
+      planType: backendPlanType,
+      title: planTitle.trim(),
+      content: planContent.trim(),
+      fullYn: isAllDay ? 'Y' as const : 'N' as const,
+      alarmYn: hasAlarm ? 'Y' as const : 'N' as const,
+      startAt: formatDateTime(startAt),
+      endAt: formatDateTime(endAt),
+      planGrpId: mainInfo.planGrpId,
+    };
+
+    console.log('📤 Sending plan request:', planRequest);
+
+    const result = await dispatch(createPlan(planRequest));
+
+    if (createPlan.fulfilled.match(result)) {
+      setShowAddPlanModal(false);
+      resetPlanForm();
+
+      // 일정 등록 후 달력 정보 다시 조회
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const targetYm = `${year}-${month}`;
+      const userId = 1; // 임시 사용
+
+      const calendarResult = await dispatch(fetchCalendarInfo({
+        targetYm,
+        usrId: userId,
+      }));
+
+      if (fetchCalendarInfo.fulfilled.match(calendarResult)) {
+        // API 응답을 Plan 타입으로 변환
+        const plans = calendarResult.payload.map(convertToPlan);
+        setCalendarPlans(plans);
+        console.log('✅ Calendar refreshed after creating plan');
+      }
+    }
+  };
+
+  const handleClosePlanModal = () => {
+    setShowAddPlanModal(false);
+    resetPlanForm();
   };
 
   const handleAllDayChange = (checked: boolean) => {
@@ -170,9 +430,14 @@ const CalendarPage: React.FC = () => {
 
   const handleStartTimeChange = (time: string) => {
     setStartTime(time);
-    // 종료 시간이 시작 시간보다 빠르면 종료 시간을 시작 시간으로 설정
+    // 종료 시간이 시작 시간보다 빠르면 종료 시간을 시작 시간 + 1시간으로 설정
     if (time > endTime) {
-      setEndTime(time);
+      const [hours, minutes] = time.split(':').map(Number);
+      const newEndDate = new Date();
+      newEndDate.setHours(hours, minutes);
+      newEndDate.setTime(newEndDate.getTime() + 60 * 60000); // +1시간
+      const newEndTime = `${String(newEndDate.getHours()).padStart(2, '0')}:${String(newEndDate.getMinutes()).padStart(2, '0')}`;
+      setEndTime(newEndTime);
     }
   };
 
@@ -184,6 +449,7 @@ const CalendarPage: React.FC = () => {
       toast.error('종료 시간은 시작 시간보다 빠를 수 없습니다.');
     }
   };
+
 
   const handleEditPlan = (plan: Plan) => {
     toast.success('일정이 수정되었습니다! ✏️');
@@ -235,13 +501,16 @@ const CalendarPage: React.FC = () => {
       dayDate.setHours(0, 0, 0, 0);
       const isPastDate = dayDate < today;
 
+      // 요일 계산 (0: 일요일, 6: 토요일)
+      const dayOfWeek = dayDate.getDay();
+
       const plansForDay = getPlansForDate(day);
       const totalExpense = getTotalExpenseForDate(day);
 
       days.push(
         <DayCell key={day} isSelected={isSelected} isPastDate={isPastDate} onClick={() => handleDayClick(day)}>
           <DayHeader>
-            <DayNumber isToday={isToday} isSelected={isSelected}>{day}</DayNumber>
+            <DayNumber isToday={isToday} isSelected={isSelected} dayOfWeek={dayOfWeek}>{day}</DayNumber>
             {totalExpense > 0 && (
               <DayExpense onClick={(e) => handleExpenseClick(e, day)}>
                 💰 {totalExpense.toLocaleString()}
@@ -278,10 +547,17 @@ const CalendarPage: React.FC = () => {
       <Header>
         <TopBar>
           <UserSection>
-            <UserAvatar src="/default-avatar.png" alt="user" />
+            <UserAvatar
+              src={mainInfo?.profile || '/default-avatar.png'}
+              alt="user"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/default-avatar.png';
+              }}
+            />
             <WelcomeText>
               <Greeting>안녕하세요! 👋</Greeting>
-              <UserName>커플님</UserName>
+              <UserName>{mainInfo?.nickname || '커플'}님</UserName>
             </WelcomeText>
           </UserSection>
           <HeaderActions>
@@ -296,8 +572,10 @@ const CalendarPage: React.FC = () => {
         <CoupleInfo>
           <HeartIcon>💕</HeartIcon>
           <CoupleText>
-            <CoupleNames>홍길동 & 김철수</CoupleNames>
-            <LoveDays>사랑한 지 100일째 💖</LoveDays>
+            <CoupleNames>
+              {mainInfo?.nickname || '나'} & {mainInfo?.opponentNickname || '상대방'}
+            </CoupleNames>
+            <LoveDays>사랑한 지 {mainInfo?.loveDday || 0}일째 💖</LoveDays>
           </CoupleText>
         </CoupleInfo>
       </Header>
@@ -317,13 +595,13 @@ const CalendarPage: React.FC = () => {
           </CalendarHeader>
 
           <CalendarGrid>
-            <WeekDayHeader>일</WeekDayHeader>
-            <WeekDayHeader>월</WeekDayHeader>
-            <WeekDayHeader>화</WeekDayHeader>
-            <WeekDayHeader>수</WeekDayHeader>
-            <WeekDayHeader>목</WeekDayHeader>
-            <WeekDayHeader>금</WeekDayHeader>
-            <WeekDayHeader>토</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={0}>일</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={1}>월</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={2}>화</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={3}>수</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={4}>목</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={5}>금</WeekDayHeader>
+            <WeekDayHeader dayOfWeek={6}>토</WeekDayHeader>
             {renderDays()}
           </CalendarGrid>
 
@@ -476,12 +754,15 @@ const CalendarPage: React.FC = () => {
                               .toLocaleString()}원
                           </ExpenseAmount>
                         </TotalExpense>
+                        <AddExpenseButton onClick={() => handleOpenExpenseModal(selectedPlan)}>
+                          ➕ 지출 추가하기
+                        </AddExpenseButton>
                       </ExpenseList>
                     ) : (
                       <EmptyState>
                         <EmptyIcon>💸</EmptyIcon>
                         <EmptyText>지출 정보가 없습니다</EmptyText>
-                        <AddExpenseButton onClick={() => setShowAddExpenseModal(true)}>
+                        <AddExpenseButton onClick={() => handleOpenExpenseModal(selectedPlan)}>
                           ➕ 지출 정보 등록하기
                         </AddExpenseButton>
                       </EmptyState>
@@ -609,24 +890,39 @@ const CalendarPage: React.FC = () => {
 
       {/* 지출 등록 모달 */}
       {showAddExpenseModal && (
-        <ModalOverlay onClick={() => setShowAddExpenseModal(false)}>
+        <ModalOverlay onClick={handleCloseExpenseModal}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <ModalTitle>💰 지출 정보 등록하기</ModalTitle>
-              <CloseButton onClick={() => setShowAddExpenseModal(false)}>✕</CloseButton>
+              <CloseButton onClick={handleCloseExpenseModal}>✕</CloseButton>
             </ModalHeader>
             <ModalBody>
+              {selectedPlanForExpense && (
+                <SelectedPlanDisplay>
+                  📌 {selectedPlanForExpense.title}
+                </SelectedPlanDisplay>
+              )}
               <InputGroup>
-                <Label>항목</Label>
-                <Input placeholder="지출 항목을 입력하세요" />
+                <Label>지출 항목</Label>
+                <Input
+                  value={expenseTitle}
+                  onChange={(e) => setExpenseTitle(e.target.value)}
+                  placeholder="예: 저녁 식사, 영화 관람 등"
+                />
               </InputGroup>
               <InputGroup>
-                <Label>금액</Label>
-                <Input type="number" placeholder="금액을 입력하세요" />
+                <Label>금액 (원)</Label>
+                <Input
+                  type="number"
+                  value={expenseAmount}
+                  onChange={(e) => setExpenseAmount(e.target.value)}
+                  placeholder="최소 100원 이상"
+                  min="100"
+                />
               </InputGroup>
             </ModalBody>
             <ModalFooter>
-              <CancelButton onClick={() => setShowAddExpenseModal(false)}>취소</CancelButton>
+              <CancelButton onClick={handleCloseExpenseModal}>취소</CancelButton>
               <ConfirmButton onClick={handleAddExpense}>등록하기</ConfirmButton>
             </ModalFooter>
           </ModalContent>
@@ -635,11 +931,11 @@ const CalendarPage: React.FC = () => {
 
       {/* 일정 추가 모달 */}
       {showAddPlanModal && (
-        <ModalOverlay onClick={() => setShowAddPlanModal(false)}>
+        <ModalOverlay onClick={handleClosePlanModal}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <ModalTitle>📅 일정 추가하기</ModalTitle>
-              <CloseButton onClick={() => setShowAddPlanModal(false)}>✕</CloseButton>
+              <CloseButton onClick={handleClosePlanModal}>✕</CloseButton>
             </ModalHeader>
             <ModalBody>
               {selectedDateForPlan && (
@@ -677,6 +973,8 @@ const CalendarPage: React.FC = () => {
                   제목
                 </StyledLabel>
                 <StyledInput
+                  value={planTitle}
+                  onChange={(e) => setPlanTitle(e.target.value)}
                   placeholder={selectedPlanType === PlanType.COUPLE ? "함께 할 일정 제목을 입력하세요" : "일정 제목을 입력하세요"}
                   coupleMode={selectedPlanType === PlanType.COUPLE}
                 />
@@ -688,6 +986,8 @@ const CalendarPage: React.FC = () => {
                   내용
                 </StyledLabel>
                 <StyledTextarea
+                  value={planContent}
+                  onChange={(e) => setPlanContent(e.target.value)}
                   placeholder={selectedPlanType === PlanType.COUPLE ? "우리가 할 일정을 적어주세요" : "일정 내용을 입력하세요"}
                   rows={3}
                   coupleMode={selectedPlanType === PlanType.COUPLE}
@@ -730,6 +1030,7 @@ const CalendarPage: React.FC = () => {
                     <TimePickerInput
                       type="time"
                       value={endTime}
+                      min={startTime}
                       onChange={(e) => handleEndTimeChange(e.target.value)}
                       disabled={isAllDay}
                     />
@@ -738,13 +1039,18 @@ const CalendarPage: React.FC = () => {
               </TimeSection>
               <InputGroup>
                 <AlarmCheckboxWrapper>
-                  <AlarmCheckbox type="checkbox" id="alarm" />
+                  <AlarmCheckbox
+                    type="checkbox"
+                    id="alarm"
+                    checked={hasAlarm}
+                    onChange={(e) => setHasAlarm(e.target.checked)}
+                  />
                   <AlarmLabel htmlFor="alarm">🔔 알람 수신</AlarmLabel>
                 </AlarmCheckboxWrapper>
               </InputGroup>
             </ModalBody>
             <ModalFooter>
-              <CancelButton onClick={() => setShowAddPlanModal(false)}>취소</CancelButton>
+              <CancelButton onClick={handleClosePlanModal}>취소</CancelButton>
               <ConfirmButton onClick={handleAddPlan}>등록하기</ConfirmButton>
             </ModalFooter>
           </ModalContent>
@@ -1012,11 +1318,21 @@ const CalendarGrid = styled.div`
   margin-bottom: 24px;
 `;
 
-const WeekDayHeader = styled.div`
+interface WeekDayHeaderProps {
+  dayOfWeek?: number;
+}
+
+const WeekDayHeader = styled.div<WeekDayHeaderProps>`
   text-align: center;
   font-size: 14px;
   font-weight: 600;
-  color: #666;
+  color: ${(props) =>
+    props.dayOfWeek === 0
+      ? '#ff4444'
+      : props.dayOfWeek === 6
+      ? '#4444ff'
+      : '#666'
+  };
   padding: 12px 0;
 `;
 
@@ -1079,12 +1395,19 @@ const DayHeader = styled.div`
 interface DayNumberProps {
   isToday?: boolean;
   isSelected?: boolean;
+  dayOfWeek?: number;
 }
 
 const DayNumber = styled.div<DayNumberProps>`
   font-size: 14px;
   font-weight: ${(props) => (props.isToday || props.isSelected ? '700' : '500')};
-  color: ${(props) => (props.isSelected ? '#1a73e8' : props.isToday ? '#4a9eff' : '#333')};
+  color: ${(props) => {
+    if (props.isSelected) return '#1a73e8';
+    if (props.isToday) return '#4a9eff';
+    if (props.dayOfWeek === 0) return '#ff4444';
+    if (props.dayOfWeek === 6) return '#4444ff';
+    return '#333';
+  }};
 `;
 
 const DayExpense = styled.div`
@@ -1959,6 +2282,18 @@ const SelectedDateDisplay = styled.div`
   text-align: center;
   margin-bottom: 20px;
   box-shadow: 0 2px 8px rgba(74, 85, 104, 0.3);
+`;
+
+const SelectedPlanDisplay = styled.div`
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 `;
 
 const TimeInputGroup = styled.div`

@@ -12,6 +12,11 @@ import {
   InviteMemberResponse,
   InviteLinkResponse,
   UpdatePlanGrpTempRequest,
+  MainInfoResponse,
+  CreatePlanRequest,
+  FindCalendarInfoRequest,
+  FindCalendarInfoResponse,
+  CreatePlanExpRequest,
 } from '../../types';
 
 const initialState: AuthState = {
@@ -20,6 +25,7 @@ const initialState: AuthState = {
   token: null,
   mainUIType: null,
   planGrpTempId: null,
+  mainInfo: null,
   loading: false,
   error: null,
 };
@@ -42,6 +48,93 @@ export const fetchMainUIType = createAsyncThunk<MainUITypeResponse>(
       console.error('❌ API Error:', error);
       console.error('Error Response:', error.response?.data);
       return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to fetch UI type');
+    }
+  }
+);
+
+// 메인 정보 조회 (CALENDAR 타입일 때)
+export const fetchMainInfo = createAsyncThunk<MainInfoResponse>(
+  'auth/fetchMainInfo',
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('📡 Fetching mainInfo from API...');
+      const response = await api.get<ApiResponse<MainInfoResponse>>(
+        '/api/v1/plan/mainInfo'
+      );
+      console.log('✅ MainInfo API Response:', response.data);
+      console.log('✅ MainInfo Data:', response.data.data);
+
+      // 백엔드 응답 구조: { data: { planGrpId, profile, nickname, ... } }
+      return response.data.data;
+    } catch (error: any) {
+      console.error('❌ MainInfo API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to fetch main info');
+    }
+  }
+);
+
+// 일정 추가
+export const createPlan = createAsyncThunk<void, CreatePlanRequest>(
+  'auth/createPlan',
+  async (planRequest, { rejectWithValue }) => {
+    try {
+      console.log('📡 Creating new plan...', planRequest);
+      const response = await api.post<ApiResponse<void>>(
+        '/api/v1/plan',
+        planRequest
+      );
+      console.log('✅ Create Plan API Response:', response.data);
+      return;
+    } catch (error: any) {
+      console.error('❌ Create Plan API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to create plan');
+    }
+  }
+);
+
+// 달력 정보 조회 (월별 일정 목록)
+export const fetchCalendarInfo = createAsyncThunk<FindCalendarInfoResponse[], FindCalendarInfoRequest>(
+  'auth/fetchCalendarInfo',
+  async (request, { rejectWithValue }) => {
+    try {
+      console.log('📡 Fetching calendar info...', request);
+      const response = await api.get<ApiResponse<FindCalendarInfoResponse[]>>(
+        '/api/v1/plan/calendarInfo',
+        {
+          params: {
+            targetYm: request.targetYm,
+            usrId: request.usrId,
+          }
+        }
+      );
+      console.log('✅ Calendar Info API Response:', response.data);
+      return response.data.data;
+    } catch (error: any) {
+      console.error('❌ Calendar Info API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to fetch calendar info');
+    }
+  }
+);
+
+// 지출 정보 등록
+export const createPlanExp = createAsyncThunk<void, CreatePlanExpRequest>(
+  'auth/createPlanExp',
+  async (planExpRequest, { rejectWithValue }) => {
+    try {
+      console.log('📡 Creating plan expense...', planExpRequest);
+      const response = await api.post<ApiResponse<void>>(
+        '/api/v1/planExp',
+        planExpRequest
+      );
+      console.log('✅ Create Plan Expense API Response:', response.data);
+      return;
+    } catch (error: any) {
+      console.error('❌ Create Plan Expense API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to create plan expense');
     }
   }
 );
@@ -195,6 +288,7 @@ const authSlice = createSlice({
       state.token = null;
       state.mainUIType = null;
       state.planGrpTempId = null;
+      state.mainInfo = null;
       localStorage.removeItem('accessToken');
     },
     clearError: (state) => {
@@ -204,6 +298,7 @@ const authSlice = createSlice({
     resetMainUIType: (state) => {
       state.mainUIType = null;
       state.planGrpTempId = null;
+      state.mainInfo = null;
     },
   },
   extraReducers: (builder) => {
@@ -303,6 +398,70 @@ const authSlice = createSlice({
       .addCase(findMyInviteLink.rejected, (state) => {
         state.loading = false;
         // 조회 실패는 정상 상황이므로 글로벌 error 설정 안함
+      })
+      // fetchMainInfo
+      .addCase(fetchMainInfo.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMainInfo.fulfilled, (state, action) => {
+        console.log('🎯 Redux fetchMainInfo fulfilled with payload:', action.payload);
+        state.loading = false;
+        state.mainInfo = action.payload;
+        console.log('🎯 State updated - mainInfo:', state.mainInfo);
+      })
+      .addCase(fetchMainInfo.rejected, (state, action) => {
+        console.log('⚠️ Redux fetchMainInfo rejected with payload:', action.payload);
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string || '메인 정보를 가져오는데 실패했습니다.');
+      })
+      // createPlan
+      .addCase(createPlan.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createPlan.fulfilled, (state) => {
+        console.log('✅ Redux createPlan fulfilled');
+        state.loading = false;
+        toast.success('일정이 등록되었습니다! 📅');
+      })
+      .addCase(createPlan.rejected, (state, action) => {
+        console.log('⚠️ Redux createPlan rejected with payload:', action.payload);
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string || '일정 등록에 실패했습니다.');
+      })
+      // fetchCalendarInfo
+      .addCase(fetchCalendarInfo.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCalendarInfo.fulfilled, (state) => {
+        console.log('✅ Redux fetchCalendarInfo fulfilled');
+        state.loading = false;
+      })
+      .addCase(fetchCalendarInfo.rejected, (state, action) => {
+        console.log('⚠️ Redux fetchCalendarInfo rejected with payload:', action.payload);
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string || '달력 정보 조회에 실패했습니다.');
+      })
+      // createPlanExp
+      .addCase(createPlanExp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createPlanExp.fulfilled, (state) => {
+        console.log('✅ Redux createPlanExp fulfilled');
+        state.loading = false;
+        toast.success('지출 정보가 등록되었습니다! 💰');
+      })
+      .addCase(createPlanExp.rejected, (state, action) => {
+        console.log('⚠️ Redux createPlanExp rejected with payload:', action.payload);
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string || '지출 등록에 실패했습니다.');
       });
   },
 });

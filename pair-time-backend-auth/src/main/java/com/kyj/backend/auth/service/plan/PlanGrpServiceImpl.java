@@ -6,7 +6,7 @@ import com.kyj.backend.auth.dto.planGrp.request.InviteRequest;
 import com.kyj.backend.auth.dto.planGrp.request.UpdatePlanGrpTempRequest;
 import com.kyj.backend.auth.dto.planGrp.response.InviteLinkResponse;
 import com.kyj.backend.auth.dto.planGrp.response.MainUITypeResponse;
-import com.kyj.backend.auth.mapper.PlanGrpTempEntityDTOMapper;
+import com.kyj.backend.auth.dto.mapper.PlanGrpTempEntityDTOMapper;
 import com.kyj.backend.auth.repository.member.MemberRepository;
 import com.kyj.backend.auth.repository.planGrp.PlanGrpRepository;
 import com.kyj.backend.auth.repository.planGrpMember.PlanGrpMemberRepository;
@@ -298,14 +298,6 @@ public class PlanGrpServiceImpl implements PlanGrpService {
         PlanGrp planGrp = PlanGrp.createPlanGrp(planGrpTemp,createPlanGrpRequest.getLoveStartedAt());
 
         //실제 그룹테이블 생성
-
-        //그룹 멤버 생성
-        PlanGrpMember.create(planGrp,planGrpTemp.getReceiver());
-        PlanGrpMember.create(planGrp,planGrpTemp.getSender());
-
-        //기념일 일정 생성
-        this.createDefaultPlanM(planGrp);
-
         planGrpRepository.save(planGrp);
 
 
@@ -334,42 +326,7 @@ public class PlanGrpServiceImpl implements PlanGrpService {
 
 //----------------------- private 메소드 영역-------------
 
-    /**
-     * 그룹 생성 시 기본 일정 생성(기념일 등 )
-     * @param planGrp
-     */
-    private void createDefaultPlanM(PlanGrp planGrp){
 
-        //  주요 일 단위 기념일
-        int[] daysList = {
-                100, 200, 300, 365,
-                500, 365 * 2, 1000,
-                365*3, 1500,
-                365 * 4 ,
-                365*5, 2000,
-                365*6,
-                365*7,
-                365*8,
-                365*9,
-                365*10
-        };
-
-        for (int day : daysList) {
-            LocalDate anniversary = planGrp.getLoveStartAt().plusDays(day);
-            PlanM anniversaryPlan = PlanM.createAnniversary(anniversary, planGrp);
-            //그룹 참여자 리스트
-            List<PlanGrpMember> planGrpMembers = planGrp.getPlanGrpMembers();
-
-            for (PlanGrpMember planGrpMember : planGrpMembers) {
-                    //계획 참여자 리스트 생성
-                    PlanParticipant.createPlanParticipant(anniversaryPlan,planGrpMember.getMember());
-            }
-        }
-
-        // 크리스마스, 발렌타인 데이 등...고도화 떄
-
-
-    }
 
 
     /**
