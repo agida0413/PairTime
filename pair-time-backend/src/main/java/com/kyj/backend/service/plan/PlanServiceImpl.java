@@ -10,8 +10,11 @@ import com.kyj.backend.dto.plan.request.CreateNewPlanMRequest;
 import com.kyj.backend.dto.plan.request.FindCalenderInfoDTO;
 import com.kyj.backend.dto.plan.response.FindCalendarInfoResDTO;
 import com.kyj.backend.dto.plan.response.MainInfoResponse;
+import com.kyj.backend.dto.plan.response.PlanExpDResDTO;
+import com.kyj.backend.mapper.PlanExpDEntityDTOMapper;
 import com.kyj.backend.mapper.PlanMEntityDTOMapper;
 import com.kyj.backend.repository.planExp.PlanExpRepository;
+import com.kyj.backend.repository.planExpD.PlanExpDRepository;
 import com.kyj.backend.repository.planGrp.PlanGrpRepository;
 import com.kyj.backend.repository.planGrpMember.PlanGrpMemberRepository;
 import com.kyj.backend.repository.planM.PlanMRepository;
@@ -26,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 2025-10-08
@@ -42,6 +44,8 @@ public class PlanServiceImpl implements PlanService{
     private final PlanGrpRepository planGrpRepository;
     private final PlanMEntityDTOMapper planMEntityDTOMapper;
     private final PlanExpRepository planExpRepository;
+    private final PlanExpDRepository planExpDRepository;
+    private final PlanExpDEntityDTOMapper planExpDEntityDTOMapper;
     /**
      * 대상월에 대한 일정의 전체 리스트를 리턴한다.
      * @param findCalenderInfoDTO
@@ -146,5 +150,16 @@ public class PlanServiceImpl implements PlanService{
             throw new KyjBizException(CmErrCode.CM002);
         }
         return mainInfoResponse;
+    }
+
+    /**
+     * 지출 상세정보 조회
+     * @param planId
+     * @return
+     */
+    @Override
+    public List<PlanExpDResDTO> findPlanExpDList(Long planId) {
+        List<PlanExpD> byPlanExpPlanMPlanId = planExpDRepository.findByPlanExp_PlanM_Id(planId);
+        return planExpDEntityDTOMapper.toPlanExpDResDTOList(byPlanExpPlanMPlanId);
     }
 }

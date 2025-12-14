@@ -129,6 +129,7 @@ kyj:
         - /login/**
         - /actuator/**
         - /invite/link/**
+        - /api/v1/test/**
 
 
 # ===== 로깅 설정 =====

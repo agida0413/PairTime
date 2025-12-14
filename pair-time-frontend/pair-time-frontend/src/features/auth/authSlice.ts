@@ -17,6 +17,7 @@ import {
   FindCalendarInfoRequest,
   FindCalendarInfoResponse,
   CreatePlanExpRequest,
+  PlanExpDetailResponse,
 } from '../../types';
 
 const initialState: AuthState = {
@@ -135,6 +136,25 @@ export const createPlanExp = createAsyncThunk<void, CreatePlanExpRequest>(
       console.error('❌ Create Plan Expense API Error:', error);
       console.error('Error Response:', error.response?.data);
       return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to create plan expense');
+    }
+  }
+);
+
+// 지출 상세 정보 조회
+export const fetchPlanExpDetails = createAsyncThunk<PlanExpDetailResponse[], number>(
+  'auth/fetchPlanExpDetails',
+  async (planId, { rejectWithValue }) => {
+    try {
+      console.log('📡 Fetching plan expense details for planId:', planId);
+      const response = await api.get<ApiResponse<PlanExpDetailResponse[]>>(
+        `/api/v1/planExp/${planId}`
+      );
+      console.log('✅ Plan Expense Details API Response:', response.data);
+      return response.data.data;
+    } catch (error: any) {
+      console.error('❌ Plan Expense Details API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to fetch plan expense details');
     }
   }
 );
@@ -462,6 +482,21 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         toast.error(action.payload as string || '지출 등록에 실패했습니다.');
+      })
+      // fetchPlanExpDetails
+      .addCase(fetchPlanExpDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPlanExpDetails.fulfilled, (state) => {
+        console.log('✅ Redux fetchPlanExpDetails fulfilled');
+        state.loading = false;
+      })
+      .addCase(fetchPlanExpDetails.rejected, (state, action) => {
+        console.log('⚠️ Redux fetchPlanExpDetails rejected with payload:', action.payload);
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string || '지출 상세 정보 조회에 실패했습니다.');
       });
   },
 });

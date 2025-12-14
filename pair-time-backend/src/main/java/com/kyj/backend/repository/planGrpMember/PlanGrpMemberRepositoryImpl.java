@@ -40,15 +40,18 @@ public class PlanGrpMemberRepositoryImpl implements PlanGrpMemberQueryRepository
      * @return
      */
     public List<PlanGrpMember> findMainInfo(Long usrId){
+
+        QPlanGrpMember subQPlanGrpMember = new QPlanGrpMember("subQPlanGrpMember");
+
         return  queryFactory
                 .select(planGrpMember)
                 .from(planGrpMember)
                 .join(planGrpMember.planGrp,planGrp).fetchJoin()
                 .join(planGrpMember.member, member).fetchJoin()
                 .where(planGrpMember.planGrp.eq(
-                                     select(planGrp)
-                                    .from(planGrpMember)
-                                    .where(planGrpMember.member.id.eq(usrId))
+                                     select(subQPlanGrpMember.planGrp)
+                                    .from(subQPlanGrpMember)
+                                    .where(subQPlanGrpMember.member.id.eq(usrId))
                 ))
                 .fetch();
     }
