@@ -6,7 +6,7 @@ import { FindCalendarInfoResponse, PlanCalendarUIType } from '../types';
 import { toast } from 'react-toastify';
 import { useAppSelector } from '../hooks/useAppSelector';
 import { useAppDispatch } from '../hooks/useAppDispatch';
-import { createPlan, fetchCalendarInfo, createPlanExp } from '../features/auth/authSlice';
+import { createPlan, fetchCalendarInfo, createPlanExp, fetchPlanExpDetails } from '../features/auth/authSlice';
 
 const CalendarPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -223,10 +223,43 @@ const CalendarPage: React.FC = () => {
     return `${formatTime(startAt)} ~ ${formatTime(endAt)}`;
   };
 
-  const handlePlanClick = (e: React.MouseEvent, plan: Plan) => {
+  const handlePlanClick = async (e: React.MouseEvent, plan: Plan) => {
     e.stopPropagation();
-    setSelectedPlan(plan);
     setSelectedDateForPlan(null);
+
+    // 지출 상세 정보 조회
+    try {
+      const result = await dispatch(fetchPlanExpDetails(plan.id));
+
+      if (fetchPlanExpDetails.fulfilled.match(result)) {
+        const expenseDetails = result.payload;
+
+        // Plan 객체에 지출 정보 추가
+        const updatedPlan: Plan = {
+          ...plan,
+          planExps: expenseDetails.length > 0 ? [{
+            id: 1,
+            planExpDetails: expenseDetails.map(detail => ({
+              id: detail.planExpDId,
+              title: detail.title,
+              expenditure: detail.expenditure,
+              authorName: plan.authorName,
+              createdAt: plan.createdAt,
+            })),
+            authorName: plan.authorName,
+            createdAt: plan.createdAt,
+          }] : [],
+        };
+
+        setSelectedPlan(updatedPlan);
+      } else {
+        // API 호출 실패 시 기존 plan 그대로 설정
+        setSelectedPlan(plan);
+      }
+    } catch (error) {
+      console.error('Failed to fetch expense details:', error);
+      setSelectedPlan(plan);
+    }
   };
 
   const handleDayClick = (day: number) => {
@@ -280,6 +313,8 @@ const CalendarPage: React.FC = () => {
     const result = await dispatch(createPlanExp(expenseRequest));
 
     if (createPlanExp.fulfilled.match(result)) {
+      const expensePlanId = selectedPlanForExpense.id;
+
       setShowAddExpenseModal(false);
       setExpenseTitle('');
       setExpenseAmount('');
@@ -301,6 +336,35 @@ const CalendarPage: React.FC = () => {
         const plans = calendarResult.payload.map(convertToPlan);
         setCalendarPlans(plans);
         console.log('✅ Calendar refreshed after creating expense');
+
+        // 선택된 일정의 지출 정보 재조회
+        if (selectedPlan && selectedPlan.id === expensePlanId) {
+          const expenseResult = await dispatch(fetchPlanExpDetails(expensePlanId));
+
+          if (fetchPlanExpDetails.fulfilled.match(expenseResult)) {
+            const expenseDetails = expenseResult.payload;
+
+            // Plan 객체에 업데이트된 지출 정보 적용
+            const updatedPlan: Plan = {
+              ...selectedPlan,
+              planExps: expenseDetails.length > 0 ? [{
+                id: 1,
+                planExpDetails: expenseDetails.map(detail => ({
+                  id: detail.planExpDId,
+                  title: detail.title,
+                  expenditure: detail.expenditure,
+                  authorName: selectedPlan.authorName,
+                  createdAt: selectedPlan.createdAt,
+                })),
+                authorName: selectedPlan.authorName,
+                createdAt: selectedPlan.createdAt,
+              }] : [],
+            };
+
+            setSelectedPlan(updatedPlan);
+            console.log('✅ Expense details refreshed for selected plan');
+          }
+        }
       }
     }
   };

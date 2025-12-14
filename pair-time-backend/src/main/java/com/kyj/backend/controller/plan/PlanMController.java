@@ -36,6 +36,7 @@ public class PlanMController {
     @GetMapping("/mainInfo")
     public ResponseEntity<ApiResponse<MainInfoResponse>> findMainInfo(){
         Long userId = Long.parseLong(SecurityContext.getUserId());
+        log.info("maininfoId ={}",userId);
         MainInfoResponse mainInfoResponse = planService.findMainInfo(userId);
         return ResponseEntity
                 .ok(ApiResponse.ok(mainInfoResponse));

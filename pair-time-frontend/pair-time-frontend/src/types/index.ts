@@ -122,6 +122,13 @@ export interface CreatePlanExpRequest {
   planId: number;       // 일정 고유번호 (최소 1)
 }
 
+// Plan Expense Detail Response - 지출 상세 정보 조회 응답
+export interface PlanExpDetailResponse {
+  planExpDId: number;   // 지출 상세 고유번호
+  title: string;        // 지출 항목 제목
+  expenditure: number;  // 지출 금액
+}
+
 // Auth Types
 export interface AuthState {
   isAuthenticated: boolean;

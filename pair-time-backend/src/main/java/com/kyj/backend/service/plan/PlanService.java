@@ -5,6 +5,7 @@ import com.kyj.backend.dto.plan.request.CreateNewPlanMRequest;
 import com.kyj.backend.dto.plan.request.FindCalenderInfoDTO;
 import com.kyj.backend.dto.plan.response.FindCalendarInfoResDTO;
 import com.kyj.backend.dto.plan.response.MainInfoResponse;
+import com.kyj.backend.dto.plan.response.PlanExpDResDTO;
 
 import java.util.List;
 
@@ -19,4 +20,5 @@ public interface PlanService {
 
     public void createPlanExp(CreateNewPlanExpDTO createNewPlanExpDTO);
     public List<FindCalendarInfoResDTO> findCalendarInfoByYm(FindCalenderInfoDTO findCalenderInfoDTO);
+    public List<PlanExpDResDTO> findPlanExpDList(Long planId);
 }
