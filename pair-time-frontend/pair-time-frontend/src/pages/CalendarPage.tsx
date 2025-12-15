@@ -6,7 +6,7 @@ import { FindCalendarInfoResponse, PlanCalendarUIType } from '../types';
 import { toast } from 'react-toastify';
 import { useAppSelector } from '../hooks/useAppSelector';
 import { useAppDispatch } from '../hooks/useAppDispatch';
-import { createPlan, fetchCalendarInfo, createPlanExp, fetchPlanExpDetails } from '../features/auth/authSlice';
+import { createPlan, fetchCalendarInfo, createPlanExp, fetchPlanExpDetails, deletePlanExpDetail, updatePlanExpDetail, fetchPlanUpdateInfo, updatePlan, deletePlan } from '../features/auth/authSlice';
 
 const CalendarPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -58,6 +58,22 @@ const CalendarPage: React.FC = () => {
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
   const [selectedPlanForExpense, setSelectedPlanForExpense] = useState<Plan | null>(null);
+
+  // 지출 수정 관련 상태
+  const [showEditExpenseModal, setShowEditExpenseModal] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<{ id: number; title: string; amount: number } | null>(null);
+  const [editExpenseTitle, setEditExpenseTitle] = useState('');
+  const [editExpenseAmount, setEditExpenseAmount] = useState('');
+
+  // 일정 수정 관련 상태
+  const [showEditPlanModal, setShowEditPlanModal] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [editPlanTitle, setEditPlanTitle] = useState('');
+  const [editPlanContent, setEditPlanContent] = useState('');
+  const [editPlanStartTime, setEditPlanStartTime] = useState('');
+  const [editPlanEndTime, setEditPlanEndTime] = useState('');
+  const [editIsAllDay, setEditIsAllDay] = useState(false);
+  const [editHasAlarm, setEditHasAlarm] = useState(false);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -515,20 +531,287 @@ const CalendarPage: React.FC = () => {
   };
 
 
-  const handleEditPlan = (plan: Plan) => {
-    toast.success('일정이 수정되었습니다! ✏️');
+  const handleEditPlan = async (plan: Plan) => {
+    // 일정 수정 정보 조회
+    const result = await dispatch(fetchPlanUpdateInfo(plan.id));
+
+    if (fetchPlanUpdateInfo.fulfilled.match(result)) {
+      const planInfo = result.payload;
+
+      setEditingPlan(plan);
+      setEditPlanTitle(planInfo.title);
+      setEditPlanContent(planInfo.content);
+      setEditIsAllDay(planInfo.fullYn === 'Y');
+      setEditHasAlarm(planInfo.alarmYn === 'Y');
+
+      // 시간 설정 - ISO 문자열에서 직접 시간 추출 (시간대 변환 방지)
+      if (planInfo.fullYn === 'Y') {
+        setEditPlanStartTime('00:00');
+        setEditPlanEndTime('23:59');
+      } else {
+        // ISO 형식: "2025-01-15T14:30:00" -> "14:30" 추출
+        const startTime = planInfo.startAt.substring(11, 16); // HH:mm
+        const endTime = planInfo.endAt.substring(11, 16);     // HH:mm
+        setEditPlanStartTime(startTime);
+        setEditPlanEndTime(endTime);
+      }
+
+      setShowEditPlanModal(true);
+    }
   };
 
-  const handleDeletePlan = (planId: number) => {
-    toast.success('일정이 삭제되었습니다! 🗑️');
+  const handleDeletePlan = async (planId: number) => {
+    if (!window.confirm('정말로 이 일정을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    const result = await dispatch(deletePlan(planId));
+
+    if (deletePlan.fulfilled.match(result)) {
+      // 삭제 성공 시 모달 닫기 및 달력 재조회
+      setSelectedPlan(null);
+
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const targetYm = `${year}-${month}`;
+      const userId = 1; // 임시 사용
+
+      const calendarResult = await dispatch(fetchCalendarInfo({
+        targetYm,
+        usrId: userId,
+      }));
+
+      if (fetchCalendarInfo.fulfilled.match(calendarResult)) {
+        const plans = calendarResult.payload.map(convertToPlan);
+        setCalendarPlans(plans);
+      }
+    }
   };
 
-  const handleEditExpense = (expenseId: number) => {
-    toast.success('지출 정보가 수정되었습니다! ✏️');
+  const handleSaveEditPlan = async () => {
+    if (!editingPlan) return;
+
+    // 필수 값 검증
+    if (!editPlanTitle.trim()) {
+      toast.error('일정 제목을 입력해주세요');
+      return;
+    }
+    if (!editPlanContent.trim()) {
+      toast.error('일정 내용을 입력해주세요');
+      return;
+    }
+
+    // 시간 처리 - ISO 문자열에서 직접 날짜 파싱 (시간대 변환 방지)
+    // ISO 형식: "2025-01-15T14:30:00"
+    const startDateStr = editingPlan.startAt.substring(0, 10); // "2025-01-15"
+    const endDateStr = editingPlan.endAt.substring(0, 10);     // "2025-01-15"
+
+    const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
+    const [endYear, endMonth, endDay] = endDateStr.split('-').map(Number);
+
+    let startDate: Date;
+    let endDate: Date;
+
+    if (!editIsAllDay) {
+      const [startHour, startMinute] = editPlanStartTime.split(':').map(Number);
+      const [endHour, endMinute] = editPlanEndTime.split(':').map(Number);
+
+      // 로컬 날짜 기준으로 Date 객체 생성 (월은 0부터 시작하므로 -1)
+      startDate = new Date(startYear, startMonth - 1, startDay, startHour, startMinute, 0, 0);
+      endDate = new Date(endYear, endMonth - 1, endDay, endHour, endMinute, 0, 0);
+
+      if (endDate <= startDate) {
+        toast.error('종료 시간은 시작 시간보다 이후여야 합니다');
+        return;
+      }
+    } else {
+      startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
+      endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
+    }
+
+    // ISO 8601 형식으로 변환 (로컬 시간대 유지)
+    const formatDateTime = (date: Date) => {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      const hh = String(date.getHours()).padStart(2, '0');
+      const min = String(date.getMinutes()).padStart(2, '0');
+      const ss = '00';
+      return `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`;
+    };
+
+    const updateRequest = {
+      planId: editingPlan.id,
+      planType: editingPlan.planType === 'SOLO_ME' || editingPlan.planType === 'SOLO_OPPONENT' ? 'SOLO' as const : 'COUPLE' as const,
+      title: editPlanTitle.trim(),
+      content: editPlanContent.trim(),
+      fullYn: editIsAllDay ? 'Y' as const : 'N' as const,
+      alarmYn: editHasAlarm ? 'Y' as const : 'N' as const,
+      startAt: formatDateTime(startDate),
+      endAt: formatDateTime(endDate),
+    };
+
+    const result = await dispatch(updatePlan(updateRequest));
+
+    if (updatePlan.fulfilled.match(result)) {
+      setShowEditPlanModal(false);
+      setEditingPlan(null);
+      setEditPlanTitle('');
+      setEditPlanContent('');
+      setEditPlanStartTime('');
+      setEditPlanEndTime('');
+      setEditIsAllDay(false);
+      setEditHasAlarm(false);
+
+      // 수정 성공 시 달력 재조회
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const targetYm = `${year}-${month}`;
+      const userId = 1; // 임시 사용
+
+      const calendarResult = await dispatch(fetchCalendarInfo({
+        targetYm,
+        usrId: userId,
+      }));
+
+      if (fetchCalendarInfo.fulfilled.match(calendarResult)) {
+        const plans = calendarResult.payload.map(convertToPlan);
+        setCalendarPlans(plans);
+        setSelectedPlan(null);
+      }
+    }
   };
 
-  const handleDeleteExpense = (expenseId: number) => {
-    toast.success('지출 정보가 삭제되었습니다! 🗑️');
+  const handleCloseEditPlanModal = () => {
+    setShowEditPlanModal(false);
+    setEditingPlan(null);
+    setEditPlanTitle('');
+    setEditPlanContent('');
+    setEditPlanStartTime('');
+    setEditPlanEndTime('');
+    setEditIsAllDay(false);
+    setEditHasAlarm(false);
+  };
+
+  const handleEditExpense = (expenseId: number, title: string, amount: number) => {
+    setEditingExpense({ id: expenseId, title, amount });
+    setEditExpenseTitle(title);
+    setEditExpenseAmount(amount.toString());
+    setShowEditExpenseModal(true);
+  };
+
+  const handleDeleteExpense = async (expenseId: number) => {
+    if (!window.confirm('정말로 이 지출 정보를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    const result = await dispatch(deletePlanExpDetail(expenseId));
+
+    if (deletePlanExpDetail.fulfilled.match(result) && selectedPlan) {
+      // 삭제 성공 시 선택된 일정의 지출 정보만 재조회
+      const expenseResult = await dispatch(fetchPlanExpDetails(selectedPlan.id));
+
+      if (fetchPlanExpDetails.fulfilled.match(expenseResult)) {
+        const expenseDetails = expenseResult.payload;
+
+        // Plan 객체에 업데이트된 지출 정보 적용
+        const updatedPlan: Plan = {
+          ...selectedPlan,
+          planExps: expenseDetails.length > 0 ? [{
+            id: 1,
+            planExpDetails: expenseDetails.map(detail => ({
+              id: detail.planExpDId,
+              title: detail.title,
+              expenditure: detail.expenditure,
+              authorName: selectedPlan.authorName,
+              createdAt: selectedPlan.createdAt,
+            })),
+            authorName: selectedPlan.authorName,
+            createdAt: selectedPlan.createdAt,
+          }] : [],
+        };
+
+        setSelectedPlan(updatedPlan);
+
+        // calendarPlans에서 해당 일정의 지출 정보도 업데이트
+        setCalendarPlans(prevPlans =>
+          prevPlans.map(plan =>
+            plan.id === selectedPlan.id ? updatedPlan : plan
+          )
+        );
+      }
+    }
+  };
+
+  const handleSaveEditExpense = async () => {
+    if (!editingExpense) return;
+
+    // 필수 값 검증
+    if (!editExpenseTitle.trim()) {
+      toast.error('지출 항목을 입력해주세요');
+      return;
+    }
+    if (!editExpenseAmount || parseFloat(editExpenseAmount) < 100) {
+      toast.error('지출 금액은 100원 이상이어야 합니다');
+      return;
+    }
+
+    const updateRequest = {
+      planExpDId: editingExpense.id,
+      title: editExpenseTitle.trim(),
+      expenditure: parseFloat(editExpenseAmount),
+    };
+
+    const result = await dispatch(updatePlanExpDetail(updateRequest));
+
+    if (updatePlanExpDetail.fulfilled.match(result)) {
+      setShowEditExpenseModal(false);
+      setEditingExpense(null);
+      setEditExpenseTitle('');
+      setEditExpenseAmount('');
+
+      // 수정 성공 시 선택된 일정의 지출 정보만 재조회
+      if (selectedPlan) {
+        const expenseResult = await dispatch(fetchPlanExpDetails(selectedPlan.id));
+
+        if (fetchPlanExpDetails.fulfilled.match(expenseResult)) {
+          const expenseDetails = expenseResult.payload;
+
+          // Plan 객체에 업데이트된 지출 정보 적용
+          const updatedPlan: Plan = {
+            ...selectedPlan,
+            planExps: expenseDetails.length > 0 ? [{
+              id: 1,
+              planExpDetails: expenseDetails.map(detail => ({
+                id: detail.planExpDId,
+                title: detail.title,
+                expenditure: detail.expenditure,
+                authorName: selectedPlan.authorName,
+                createdAt: selectedPlan.createdAt,
+              })),
+              authorName: selectedPlan.authorName,
+              createdAt: selectedPlan.createdAt,
+            }] : [],
+          };
+
+          setSelectedPlan(updatedPlan);
+
+          // calendarPlans에서 해당 일정의 지출 정보도 업데이트
+          setCalendarPlans(prevPlans =>
+            prevPlans.map(plan =>
+              plan.id === selectedPlan.id ? updatedPlan : plan
+            )
+          );
+        }
+      }
+    }
+  };
+
+  const handleCloseEditExpenseModal = () => {
+    setShowEditExpenseModal(false);
+    setEditingExpense(null);
+    setEditExpenseTitle('');
+    setEditExpenseAmount('');
   };
 
   const handleEditMemory = (memoryId: number) => {
@@ -801,7 +1084,7 @@ const CalendarPage: React.FC = () => {
                               </ExpenseAmount>
                             </ExpenseItem>
                             <ExpenseItemActions>
-                              <ExpenseActionButton edit onClick={() => handleEditExpense(exp.id)}>
+                              <ExpenseActionButton edit onClick={() => handleEditExpense(exp.id, exp.title, exp.expenditure)}>
                                 ✏️
                               </ExpenseActionButton>
                               <ExpenseActionButton delete onClick={() => handleDeleteExpense(exp.id)}>
@@ -993,6 +1276,42 @@ const CalendarPage: React.FC = () => {
         </ModalOverlay>
       )}
 
+      {/* 지출 수정 모달 */}
+      {showEditExpenseModal && editingExpense && (
+        <ModalOverlay onClick={handleCloseEditExpenseModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>✏️ 지출 정보 수정하기</ModalTitle>
+              <CloseButton onClick={handleCloseEditExpenseModal}>✕</CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              <InputGroup>
+                <Label>지출 항목</Label>
+                <Input
+                  value={editExpenseTitle}
+                  onChange={(e) => setEditExpenseTitle(e.target.value)}
+                  placeholder="예: 저녁 식사, 영화 관람 등"
+                />
+              </InputGroup>
+              <InputGroup>
+                <Label>금액 (원)</Label>
+                <Input
+                  type="number"
+                  value={editExpenseAmount}
+                  onChange={(e) => setEditExpenseAmount(e.target.value)}
+                  placeholder="최소 100원 이상"
+                  min="100"
+                />
+              </InputGroup>
+            </ModalBody>
+            <ModalFooter>
+              <CancelButton onClick={handleCloseEditExpenseModal}>취소</CancelButton>
+              <ConfirmButton onClick={handleSaveEditExpense}>저장하기</ConfirmButton>
+            </ModalFooter>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
       {/* 일정 추가 모달 */}
       {showAddPlanModal && (
         <ModalOverlay onClick={handleClosePlanModal}>
@@ -1116,6 +1435,112 @@ const CalendarPage: React.FC = () => {
             <ModalFooter>
               <CancelButton onClick={handleClosePlanModal}>취소</CancelButton>
               <ConfirmButton onClick={handleAddPlan}>등록하기</ConfirmButton>
+            </ModalFooter>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
+      {/* 일정 수정 모달 */}
+      {showEditPlanModal && editingPlan && (
+        <ModalOverlay onClick={handleCloseEditPlanModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>✏️ 일정 수정하기</ModalTitle>
+              <CloseButton onClick={handleCloseEditPlanModal}>✕</CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              <StyledInputGroup coupleMode={editingPlan.planType === 'COUPLE'}>
+                <StyledLabel coupleMode={editingPlan.planType === 'COUPLE'}>
+                  <LabelIcon>{editingPlan.planType === 'COUPLE' ? '📌' : '📝'}</LabelIcon>
+                  제목
+                </StyledLabel>
+                <StyledInput
+                  value={editPlanTitle}
+                  onChange={(e) => setEditPlanTitle(e.target.value)}
+                  placeholder="일정 제목을 입력하세요"
+                  coupleMode={editingPlan.planType === 'COUPLE'}
+                />
+              </StyledInputGroup>
+
+              <StyledInputGroup coupleMode={editingPlan.planType === 'COUPLE'}>
+                <StyledLabel coupleMode={editingPlan.planType === 'COUPLE'}>
+                  <LabelIcon>{editingPlan.planType === 'COUPLE' ? '📋' : '📄'}</LabelIcon>
+                  내용
+                </StyledLabel>
+                <StyledTextarea
+                  value={editPlanContent}
+                  onChange={(e) => setEditPlanContent(e.target.value)}
+                  placeholder="일정 내용을 입력하세요"
+                  rows={3}
+                  coupleMode={editingPlan.planType === 'COUPLE'}
+                />
+              </StyledInputGroup>
+
+              <TimeSection coupleMode={editingPlan.planType === 'COUPLE'}>
+                <TimeSectionHeader>
+                  <TimeSectionTitle coupleMode={editingPlan.planType === 'COUPLE'}>
+                    <TimeIcon>{editingPlan.planType === 'COUPLE' ? '⏰' : '🕐'}</TimeIcon>
+                    일정 시간
+                  </TimeSectionTitle>
+                  <AllDayToggle>
+                    <AllDayCheckbox
+                      type="checkbox"
+                      id="editAllDay"
+                      checked={editIsAllDay}
+                      onChange={(e) => {
+                        const isAllDay = e.target.checked;
+                        setEditIsAllDay(isAllDay);
+                        if (isAllDay) {
+                          setEditPlanStartTime('00:00');
+                          setEditPlanEndTime('23:59');
+                        }
+                      }}
+                      coupleMode={editingPlan.planType === 'COUPLE'}
+                    />
+                    <AllDayLabel htmlFor="editAllDay" coupleMode={editingPlan.planType === 'COUPLE'}>종일</AllDayLabel>
+                  </AllDayToggle>
+                </TimeSectionHeader>
+
+                <TimePickerContainer>
+                  <TimePickerBox disabled={editIsAllDay} coupleMode={editingPlan.planType === 'COUPLE'}>
+                    <TimePickerLabel coupleMode={editingPlan.planType === 'COUPLE'}>시작</TimePickerLabel>
+                    <TimePickerInput
+                      type="time"
+                      value={editPlanStartTime}
+                      onChange={(e) => setEditPlanStartTime(e.target.value)}
+                      disabled={editIsAllDay}
+                    />
+                  </TimePickerBox>
+
+                  <TimeArrow coupleMode={editingPlan.planType === 'COUPLE'}>→</TimeArrow>
+
+                  <TimePickerBox disabled={editIsAllDay} coupleMode={editingPlan.planType === 'COUPLE'}>
+                    <TimePickerLabel coupleMode={editingPlan.planType === 'COUPLE'}>종료</TimePickerLabel>
+                    <TimePickerInput
+                      type="time"
+                      value={editPlanEndTime}
+                      min={editPlanStartTime}
+                      onChange={(e) => setEditPlanEndTime(e.target.value)}
+                      disabled={editIsAllDay}
+                    />
+                  </TimePickerBox>
+                </TimePickerContainer>
+              </TimeSection>
+              <InputGroup>
+                <AlarmCheckboxWrapper>
+                  <AlarmCheckbox
+                    type="checkbox"
+                    id="editAlarm"
+                    checked={editHasAlarm}
+                    onChange={(e) => setEditHasAlarm(e.target.checked)}
+                  />
+                  <AlarmLabel htmlFor="editAlarm">🔔 알람 수신</AlarmLabel>
+                </AlarmCheckboxWrapper>
+              </InputGroup>
+            </ModalBody>
+            <ModalFooter>
+              <CancelButton onClick={handleCloseEditPlanModal}>취소</CancelButton>
+              <ConfirmButton onClick={handleSaveEditPlan}>저장하기</ConfirmButton>
             </ModalFooter>
           </ModalContent>
         </ModalOverlay>

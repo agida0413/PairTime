@@ -5,12 +5,11 @@ import com.kyj.backend.domain.plan.planExp.PlanExp;
 import com.kyj.backend.domain.plan.planExpD.PlanExpD;
 import com.kyj.backend.domain.plan.planGrp.PlanGrp;
 import com.kyj.backend.domain.plan.planM.PlanM;
-import com.kyj.backend.dto.plan.request.CreateNewPlanExpDTO;
-import com.kyj.backend.dto.plan.request.CreateNewPlanMRequest;
-import com.kyj.backend.dto.plan.request.FindCalenderInfoDTO;
+import com.kyj.backend.dto.plan.request.*;
 import com.kyj.backend.dto.plan.response.FindCalendarInfoResDTO;
 import com.kyj.backend.dto.plan.response.MainInfoResponse;
 import com.kyj.backend.dto.plan.response.PlanExpDResDTO;
+import com.kyj.backend.dto.plan.response.UpdatePlanMResDTO;
 import com.kyj.backend.mapper.PlanExpDEntityDTOMapper;
 import com.kyj.backend.mapper.PlanMEntityDTOMapper;
 import com.kyj.backend.repository.planExp.PlanExpRepository;
@@ -161,5 +160,79 @@ public class PlanServiceImpl implements PlanService{
     public List<PlanExpDResDTO> findPlanExpDList(Long planId) {
         List<PlanExpD> byPlanExpPlanMPlanId = planExpDRepository.findByPlanExp_PlanM_Id(planId);
         return planExpDEntityDTOMapper.toPlanExpDResDTOList(byPlanExpPlanMPlanId);
+    }
+
+    /**
+     * 계획지출상세 삭제
+     * @param planExpDId
+     */
+    @Override
+    @Transactional
+    public void deletePlanExpD(Long planExpDId) {
+        PlanExpD planExpD = planExpDRepository.findById(planExpDId)
+                .orElseThrow(() -> {
+                    log.error("planExpDID에 해당하는 지출정보가 없음 = {}", planExpDId);
+                    return  new KyjBizException(CmErrCode.CM002);
+                });
+
+        // 직접 삭제 - orphanRemoval과 cascade 설정으로 인해 연관관계 자동 정리
+        planExpDRepository.delete(planExpD);
+    }
+
+    /**
+     * 계획지출수정
+     * @param updatePlanExpDTO
+     */
+    @Override
+    @Transactional
+    public void updatePlanExpD(UpdatePlanExpRequestDTO updatePlanExpDTO) {
+        PlanExpD planExpD = planExpDRepository.findById(updatePlanExpDTO.getPlanExpDId())
+                .orElseThrow(() -> {
+                    log.error("planExpDID에 해당하는 지출정보가 없음 = {}", updatePlanExpDTO.getPlanExpDId());
+                    return  new KyjBizException(CmErrCode.CM002);
+                });
+
+        planExpD.changePlanExpD(updatePlanExpDTO.getTitle(), updatePlanExpDTO.getExpenditure());
+
+    }
+
+
+    @Override
+    @Transactional
+    public UpdatePlanMResDTO findUpdatePlanM(Long planId) {
+        PlanM planM = planMRepository.findById(planId)
+                .orElseThrow(() -> {
+                    log.error("계획 마스터를 찾을수 없습니다 = {}", planId);
+                    return new KyjBizException(CmErrCode.CM002);
+                });
+        return planMEntityDTOMapper.toUpdatePlanMResDTO(planM);
+    }
+
+    @Override
+    @Transactional
+    public void updatePlanM(UpdatePlanMRequest updatePlanMRequest) {
+        PlanM planM = planMRepository.findById(updatePlanMRequest.getPlanId())
+                .orElseThrow(() -> {
+                    log.error("계획 마스터를 찾을수 없습니다 ");
+                    return new KyjBizException(CmErrCode.CM002);
+                });
+        planM.changePlanM(updatePlanMRequest.getTitle(),
+                updatePlanMRequest.getContent(),
+                updatePlanMRequest.getFullYn(),
+                updatePlanMRequest.getAlarmYn(),
+                updatePlanMRequest.getStartAt(),
+                updatePlanMRequest.getEndAt());
+    }
+
+    @Override
+    @Transactional
+    public void deletePlanM(Long planId) {
+        PlanM planM = planMRepository.findById(planId)
+                .orElseThrow(() -> {
+                    log.error("계획 마스터를 찾을수 없습니다 = {}", planId);
+                    return new KyjBizException(CmErrCode.CM002);
+                });
+
+        planMRepository.delete(planM);
     }
 }
