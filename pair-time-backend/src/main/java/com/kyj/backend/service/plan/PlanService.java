@@ -1,11 +1,10 @@
 package com.kyj.backend.service.plan;
 
-import com.kyj.backend.dto.plan.request.CreateNewPlanExpDTO;
-import com.kyj.backend.dto.plan.request.CreateNewPlanMRequest;
-import com.kyj.backend.dto.plan.request.FindCalenderInfoDTO;
+import com.kyj.backend.dto.plan.request.*;
 import com.kyj.backend.dto.plan.response.FindCalendarInfoResDTO;
 import com.kyj.backend.dto.plan.response.MainInfoResponse;
 import com.kyj.backend.dto.plan.response.PlanExpDResDTO;
+import com.kyj.backend.dto.plan.response.UpdatePlanMResDTO;
 
 import java.util.List;
 
@@ -21,4 +20,12 @@ public interface PlanService {
     public void createPlanExp(CreateNewPlanExpDTO createNewPlanExpDTO);
     public List<FindCalendarInfoResDTO> findCalendarInfoByYm(FindCalenderInfoDTO findCalenderInfoDTO);
     public List<PlanExpDResDTO> findPlanExpDList(Long planId);
+
+    public void deletePlanExpD(Long planExpDId);
+    public void updatePlanExpD(UpdatePlanExpRequestDTO updatePlanExpDTO);
+
+    public UpdatePlanMResDTO findUpdatePlanM(Long planId);
+    public void updatePlanM(UpdatePlanMRequest updatePlanMRequest);
+    public void deletePlanM(Long planId);
+
 }

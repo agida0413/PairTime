@@ -1,7 +1,7 @@
 package com.kyj.backend.controller.plan;
 
 import com.kyj.backend.dto.plan.request.CreateNewPlanExpDTO;
-import com.kyj.backend.dto.plan.request.CreateNewPlanMRequest;
+import com.kyj.backend.dto.plan.request.UpdatePlanExpRequestDTO;
 import com.kyj.backend.dto.plan.response.PlanExpDResDTO;
 import com.kyj.backend.service.plan.PlanService;
 import com.kyj.core.api.ApiResponse;
@@ -49,7 +49,31 @@ public class PlanExpController {
     @GetMapping("/{planId}")
     public ResponseEntity<ApiResponse<?>> findPlanExpD(@PathVariable Long planId){
         List<PlanExpDResDTO> planExpDList = planService.findPlanExpDList(planId);
-
         return ResponseEntity.ok(ApiResponse.ok(planExpDList));
+    }
+
+
+    /**
+     * 지출정보 삭제
+     * @param planExpDId
+     * @return
+     */
+    @DeleteMapping("/{planExpDId}")
+    public ResponseEntity<ApiResponse<?>> deletePlanExpD(@PathVariable Long planExpDId){
+        planService.deletePlanExpD(planExpDId);
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    /**
+     * 지출정보 업데이트
+     * @param updatePlanExpDTO
+     * @return
+     */
+    @PutMapping( consumes = MediaType.APPLICATION_JSON_VALUE
+            , produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ApiResponse<?>> updatePlanExpD(@RequestBody @Valid UpdatePlanExpRequestDTO updatePlanExpDTO){
+        planService.updatePlanExpD(updatePlanExpDTO);
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 }

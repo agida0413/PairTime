@@ -14,4 +14,5 @@ public class PlanExpDResDTO {
     private Long planExpDId;
     private String title;
     private BigDecimal expenditure;
+
 }

@@ -41,6 +41,11 @@ public class PlanExp extends BaseEntity {
         planM.addPlanExp(this);
     }
 
+    public void removePlanExpD(PlanExpD planExpD){
+        this.planExpDList.remove(planExpD);
+        planExpD.setPlanExp(null);
+    }
+
     /**
      * 지출 마스터 생성
      */

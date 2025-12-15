@@ -18,6 +18,9 @@ import {
   FindCalendarInfoResponse,
   CreatePlanExpRequest,
   PlanExpDetailResponse,
+  UpdatePlanExpRequest,
+  UpdatePlanResponse,
+  UpdatePlanRequest,
 } from '../../types';
 
 const initialState: AuthState = {
@@ -155,6 +158,103 @@ export const fetchPlanExpDetails = createAsyncThunk<PlanExpDetailResponse[], num
       console.error('❌ Plan Expense Details API Error:', error);
       console.error('Error Response:', error.response?.data);
       return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to fetch plan expense details');
+    }
+  }
+);
+
+// 지출 상세 정보 삭제
+export const deletePlanExpDetail = createAsyncThunk<void, number>(
+  'auth/deletePlanExpDetail',
+  async (planExpDId, { rejectWithValue }) => {
+    try {
+      console.log('📡 Deleting plan expense detail for planExpDId:', planExpDId);
+      const response = await api.delete<ApiResponse<void>>(
+        `/api/v1/planExp/${planExpDId}`
+      );
+      console.log('✅ Delete Plan Expense Detail API Response:', response.data);
+      return;
+    } catch (error: any) {
+      console.error('❌ Delete Plan Expense Detail API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to delete plan expense detail');
+    }
+  }
+);
+
+// 지출 상세 정보 수정
+export const updatePlanExpDetail = createAsyncThunk<void, UpdatePlanExpRequest>(
+  'auth/updatePlanExpDetail',
+  async (updateRequest, { rejectWithValue }) => {
+    try {
+      console.log('📡 Updating plan expense detail:', updateRequest);
+      const response = await api.put<ApiResponse<void>>(
+        '/api/v1/planExp',
+        updateRequest
+      );
+      console.log('✅ Update Plan Expense Detail API Response:', response.data);
+      return;
+    } catch (error: any) {
+      console.error('❌ Update Plan Expense Detail API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to update plan expense detail');
+    }
+  }
+);
+
+// 일정 수정 정보 조회
+export const fetchPlanUpdateInfo = createAsyncThunk<UpdatePlanResponse, number>(
+  'auth/fetchPlanUpdateInfo',
+  async (planId, { rejectWithValue }) => {
+    try {
+      console.log('📡 Fetching plan update info for planId:', planId);
+      const response = await api.get<ApiResponse<UpdatePlanResponse>>(
+        `/api/v1/plan/updateInfo/${planId}`
+      );
+      console.log('✅ Plan Update Info API Response:', response.data);
+      return response.data.data;
+    } catch (error: any) {
+      console.error('❌ Plan Update Info API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to fetch plan update info');
+    }
+  }
+);
+
+// 일정 수정
+export const updatePlan = createAsyncThunk<void, UpdatePlanRequest>(
+  'auth/updatePlan',
+  async (updateRequest, { rejectWithValue }) => {
+    try {
+      console.log('📡 Updating plan:', updateRequest);
+      const response = await api.put<ApiResponse<void>>(
+        '/api/v1/plan',
+        updateRequest
+      );
+      console.log('✅ Update Plan API Response:', response.data);
+      return;
+    } catch (error: any) {
+      console.error('❌ Update Plan API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to update plan');
+    }
+  }
+);
+
+// 일정 삭제
+export const deletePlan = createAsyncThunk<void, number>(
+  'auth/deletePlan',
+  async (planId, { rejectWithValue }) => {
+    try {
+      console.log('📡 Deleting plan for planId:', planId);
+      const response = await api.delete<ApiResponse<void>>(
+        `/api/v1/plan/${planId}`
+      );
+      console.log('✅ Delete Plan API Response:', response.data);
+      return;
+    } catch (error: any) {
+      console.error('❌ Delete Plan API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to delete plan');
     }
   }
 );
@@ -497,6 +597,85 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         toast.error(action.payload as string || '지출 상세 정보 조회에 실패했습니다.');
+      })
+      // deletePlanExpDetail
+      .addCase(deletePlanExpDetail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deletePlanExpDetail.fulfilled, (state) => {
+        console.log('✅ Redux deletePlanExpDetail fulfilled');
+        state.loading = false;
+        toast.success('지출 정보가 삭제되었습니다! 🗑️');
+      })
+      .addCase(deletePlanExpDetail.rejected, (state, action) => {
+        console.log('⚠️ Redux deletePlanExpDetail rejected with payload:', action.payload);
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string || '지출 삭제에 실패했습니다.');
+      })
+      // updatePlanExpDetail
+      .addCase(updatePlanExpDetail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updatePlanExpDetail.fulfilled, (state) => {
+        console.log('✅ Redux updatePlanExpDetail fulfilled');
+        state.loading = false;
+        toast.success('지출 정보가 수정되었습니다! ✏️');
+      })
+      .addCase(updatePlanExpDetail.rejected, (state, action) => {
+        console.log('⚠️ Redux updatePlanExpDetail rejected with payload:', action.payload);
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string || '지출 수정에 실패했습니다.');
+      })
+      // fetchPlanUpdateInfo
+      .addCase(fetchPlanUpdateInfo.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPlanUpdateInfo.fulfilled, (state) => {
+        console.log('✅ Redux fetchPlanUpdateInfo fulfilled');
+        state.loading = false;
+      })
+      .addCase(fetchPlanUpdateInfo.rejected, (state, action) => {
+        console.log('⚠️ Redux fetchPlanUpdateInfo rejected with payload:', action.payload);
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string || '일정 정보 조회에 실패했습니다.');
+      })
+      // updatePlan
+      .addCase(updatePlan.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updatePlan.fulfilled, (state) => {
+        console.log('✅ Redux updatePlan fulfilled');
+        state.loading = false;
+        toast.success('일정이 수정되었습니다! 📅');
+      })
+      .addCase(updatePlan.rejected, (state, action) => {
+        console.log('⚠️ Redux updatePlan rejected with payload:', action.payload);
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string || '일정 수정에 실패했습니다.');
+      })
+      // deletePlan
+      .addCase(deletePlan.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deletePlan.fulfilled, (state) => {
+        console.log('✅ Redux deletePlan fulfilled');
+        state.loading = false;
+        toast.success('일정이 삭제되었습니다! 🗑️');
+      })
+      .addCase(deletePlan.rejected, (state, action) => {
+        console.log('⚠️ Redux deletePlan rejected with payload:', action.payload);
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string || '일정 삭제에 실패했습니다.');
       });
   },
 });

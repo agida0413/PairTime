@@ -49,6 +49,10 @@ public class PlanExpD extends BaseEntity {
         return  planExpD;
     }
 
+    public void changePlanExpD(String title,BigDecimal expenditure){
+        this.setExpenditure(expenditure);
+        this.setTitle(title);
+    }
 
 //
 //    private PlanExpD(Builder builder) {

@@ -2,8 +2,10 @@ package com.kyj.backend.controller.plan;
 
 import com.kyj.backend.dto.plan.request.CreateNewPlanMRequest;
 import com.kyj.backend.dto.plan.request.FindCalenderInfoDTO;
+import com.kyj.backend.dto.plan.request.UpdatePlanMRequest;
 import com.kyj.backend.dto.plan.response.FindCalendarInfoResDTO;
 import com.kyj.backend.dto.plan.response.MainInfoResponse;
+import com.kyj.backend.dto.plan.response.UpdatePlanMResDTO;
 import com.kyj.backend.service.plan.PlanService;
 import com.kyj.core.api.ApiResponse;
 import com.kyj.core.security.client.util.SecurityContext;
@@ -67,5 +69,47 @@ public class PlanMController {
         planService.createNewPlanM(createNewPlanMRequest);
 
         return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+
+
+    /**
+     * 계획수정을 할 정보를 리턴한다
+     * @return
+     */
+    @GetMapping("/updateInfo/{planId}")
+    public ResponseEntity<ApiResponse<?>> findPlanMUpdateInfo(@PathVariable Long planId){
+        UpdatePlanMResDTO updatePlanM = planService.findUpdatePlanM(planId);
+        return ResponseEntity
+                .ok(ApiResponse.ok(updatePlanM));
+    }
+
+    /**
+     * 계획 수정을한다.
+     * @param updatePlanMRequest
+     * @return
+     */
+    @PutMapping( consumes = MediaType.APPLICATION_JSON_VALUE
+            , produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ApiResponse<?>> updatePlanM(@RequestBody @Valid UpdatePlanMRequest updatePlanMRequest){
+        log.info("updatePlanMRequest.getStartAt()={}",updatePlanMRequest.getStartAt());
+        planService.updatePlanM(updatePlanMRequest);
+
+        return ResponseEntity
+                .ok(ApiResponse.ok());
+    }
+
+    /**
+     * 계획 을 삭제한다.
+     * @param planId
+     * @return
+     */
+    @DeleteMapping("/{planId}")
+    public ResponseEntity<ApiResponse<?>> deletePlanM(@PathVariable Long planId){
+        planService.deletePlanM(planId);
+
+        return ResponseEntity
+                .ok(ApiResponse.ok());
     }
 }

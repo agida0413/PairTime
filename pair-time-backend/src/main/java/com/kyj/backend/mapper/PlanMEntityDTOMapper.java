@@ -4,6 +4,7 @@ package com.kyj.backend.mapper;
 import com.kyj.backend.domain.plan.planM.PlanM;
 import com.kyj.backend.dto.plan.response.FindCalendarInfoResDTO;
 import com.kyj.backend.dto.plan.response.PlanCalendarUIType;
+import com.kyj.backend.dto.plan.response.UpdatePlanMResDTO;
 import com.kyj.core.security.client.util.SecurityContext;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
@@ -20,6 +21,8 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public interface PlanMEntityDTOMapper {
 
+
+    UpdatePlanMResDTO toUpdatePlanMResDTO(PlanM planM);
     // 단일 객체 매핑 (이 메소드의 @Mapping이 List 변환에도 적용됨)
     @Mapping(source = "id", target = "planId")
     FindCalendarInfoResDTO toFindCalendarInfoResDTO(PlanM planM);

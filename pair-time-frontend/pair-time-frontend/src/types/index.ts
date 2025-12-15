@@ -129,6 +129,36 @@ export interface PlanExpDetailResponse {
   expenditure: number;  // 지출 금액
 }
 
+// Update Plan Expense Request - 지출 정보 수정 요청
+export interface UpdatePlanExpRequest {
+  planExpDId: number;   // 지출 상세 고유번호 (최소 1)
+  title: string;        // 지출제목 (필수)
+  expenditure: number;  // 지출금액 (최소 100)
+}
+
+// Update Plan Response - 일정 수정 정보 조회 응답
+export interface UpdatePlanResponse {
+  planType: 'COUPLE' | 'SOLO';
+  title: string;
+  content: string;
+  fullYn: 'Y' | 'N';
+  alarmYn: 'Y' | 'N';
+  startAt: string;  // ISO 8601 형식
+  endAt: string;    // ISO 8601 형식
+}
+
+// Update Plan Request - 일정 수정 요청
+export interface UpdatePlanRequest {
+  planId: number;       // 일정 고유번호 (최소 1)
+  planType: 'COUPLE' | 'SOLO';
+  title: string;        // 제목 (최대 50자)
+  content: string;      // 내용 (최대 300자)
+  fullYn: 'Y' | 'N';    // 하루종일 여부
+  alarmYn: 'Y' | 'N';   // 알람 여부
+  startAt: string;      // ISO 8601 형식
+  endAt: string;        // ISO 8601 형식
+}
+
 // Auth Types
 export interface AuthState {
   isAuthenticated: boolean;

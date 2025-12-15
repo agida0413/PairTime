@@ -143,7 +143,19 @@ public class PlanM extends BaseEntity {
         return planM;
     }
 
-
+    /**
+     * 계획 수정
+     * planType, planGrp 등은 수정 불가 (readonly)
+     */
+    public void  changePlanM(String title, String content, String fullYn, String alarmYn,
+                                    LocalDateTime startAt, LocalDateTime endAt){
+        this.title = title;
+        this.content = content;
+        this.fullYn = fullYn;
+        this.alarmYn = alarmYn;
+        this.startAt = startAt;
+        this.endAt = endAt;
+    }
     /**
      * 기념일 일정 생성
      * @return
