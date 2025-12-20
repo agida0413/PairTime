@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotNull;
         })
 })
 @Getter
+@Setter
 public class File extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,6 +48,16 @@ public class File extends BaseEntity {
     @NotNull
     private PlanPost planPost;
 
+
+    public static File createNewFile (FileType fileType,String fileUrl,String filename ){
+        File file = new File();
+        file.setPriority(1);
+        file.setFileType(fileType);
+        file.setFileUrl(fileUrl);
+        file.setFilename(filename);
+
+        return file;
+    }
 //    void setFileType(FileType fileType) {
 //        this.fileType = fileType;
 //    }

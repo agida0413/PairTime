@@ -43,8 +43,23 @@ public class PlanPost extends BaseEntity {
     @NotNull
     private PlanM planM;
 
+    /**
+     * 파일 추가
+     * @param file
+     */
+    public void addFile(File file){
+        this.files.add(file);
+        file.setPlanPost(this);
+    }
 
+    public static PlanPost createPlanPost(String title,String content,PlanM planM){
+        PlanPost planPost = new PlanPost();
+        planPost.setPlanM(planM);
+        planPost.setContent(content);
+        planPost.setTitle(title);
 
+        return planPost;
+    }
 
 //    /**
 //     * 연관관계 편의메소드

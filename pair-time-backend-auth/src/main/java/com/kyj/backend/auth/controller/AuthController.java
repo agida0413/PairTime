@@ -33,7 +33,6 @@ public class AuthController {
 
     private final PlanGrpService planService;
     private final MemberService memberService;
-
     /**
      * 메인화면의 타입을 결정하는 API
      * @return
