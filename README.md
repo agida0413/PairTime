@@ -4,6 +4,7 @@
 
 <br/>
 
+
 ## 🛠️ Tech Stack
 
 ### Backend
@@ -45,8 +46,7 @@
 ## 🖼️ 스크린샷
 
 ### 메인 화면
-![메인 화면](./screenshot-placeholder.png)
-> *스크린샷 첨부 예정 - 전체 캘린더 뷰 및 사이드 패널*
+<img width="1899" height="844" alt="캡처본페어타임" src="" />
 
 <br/>
 
