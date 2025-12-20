@@ -9,6 +9,14 @@ spring:
   application:
     name: pair-time-backend-auth
 
+  # Static resource 에러 무시
+  web:
+    resources:
+      add-mappings: false
+  mvc:
+    throw-exception-if-no-handler-found: false
+    log-resolved-exception: false
+
   # ===== 이메일 설정 (kyj-lib-core) =====
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
@@ -130,6 +138,15 @@ kyj:
         - /actuator/**
         - /invite/link/**
         - /api/v1/test/**
+        - /inspector/**
+        - /static/**
+        - /*.js
+        - /*.css
+        - /*.html
+        - /*.ico
+        - /*.png
+        - /*.jpg
+        - /*.svg
 
 
 # ===== 로깅 설정 =====
@@ -139,5 +156,7 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.type: trace
     org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.web.servlet.resource: ERROR
+    org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: ERROR
 
 

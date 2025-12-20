@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { api } from '../../services/api';
+import axios from 'axios';
 import {
   AuthState,
   MainUITypeResponse,
@@ -17,10 +18,12 @@ import {
   FindCalendarInfoRequest,
   FindCalendarInfoResponse,
   CreatePlanExpRequest,
+  CreatePlanPostRequest,
   PlanExpDetailResponse,
   UpdatePlanExpRequest,
   UpdatePlanResponse,
   UpdatePlanRequest,
+  PlanPostResponse,
 } from '../../types';
 
 const initialState: AuthState = {
@@ -139,6 +142,84 @@ export const createPlanExp = createAsyncThunk<void, CreatePlanExpRequest>(
       console.error('❌ Create Plan Expense API Error:', error);
       console.error('Error Response:', error.response?.data);
       return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to create plan expense');
+    }
+  }
+);
+
+// 게시글 등록
+export const createPlanPost = createAsyncThunk<void, CreatePlanPostRequest>(
+  'auth/createPlanPost',
+  async (planPostRequest, { rejectWithValue }) => {
+    try {
+      console.log('📡 Creating plan post...', planPostRequest);
+      console.log('📷 Image file:', planPostRequest.image);
+
+      // FormData 생성 - DTO의 각 필드를 개별 파트로 전송
+      const formData = new FormData();
+
+      // 각 필드를 개별적으로 추가 (Spring이 자동으로 DTO 객체로 바인딩)
+      formData.append('planId', planPostRequest.planId.toString());
+      formData.append('title', planPostRequest.title);
+      formData.append('content', planPostRequest.content);
+      formData.append('fileType', planPostRequest.fileType);
+
+      // 이미지 파일 추가
+      if (planPostRequest.image) {
+        formData.append('image', planPostRequest.image);
+        console.log('✅ Image added to FormData:', planPostRequest.image.name, planPostRequest.image.size, 'bytes');
+      }
+
+      // FormData 내용 확인
+      console.log('📦 FormData entries:');
+      Array.from(formData.entries()).forEach(([key, value]) => {
+        console.log(key, value);
+      });
+
+      console.log('🚀 Sending request to /api/v1/planPost...');
+
+      // 인증 토큰 가져오기
+      const token = localStorage.getItem('accessToken');
+
+      // axios를 직접 사용하여 FormData 전송 (api 인스턴스의 기본 Content-Type을 우회)
+      const response = await axios.post<ApiResponse<void>>(
+        '/api/v1/planPost',
+        formData,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+            // Content-Type을 설정하지 않으면 axios가 자동으로 multipart/form-data와 boundary 설정
+          },
+        }
+      );
+      console.log('✅ Create Plan Post API Response:', response.data);
+      return;
+    } catch (error: any) {
+      console.error('❌ Create Plan Post API Error:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error response:', error.response);
+      console.error('❌ Error response data:', error.response?.data);
+      console.error('❌ Error response status:', error.response?.status);
+      console.error('❌ Error response headers:', error.response?.headers);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || error.message || 'Failed to create plan post');
+    }
+  }
+);
+
+// 게시글 조회
+export const fetchPlanPost = createAsyncThunk<PlanPostResponse, number>(
+  'auth/fetchPlanPost',
+  async (planId, { rejectWithValue }) => {
+    try {
+      console.log('📡 Fetching plan post for planId:', planId);
+      const response = await api.get<ApiResponse<PlanPostResponse>>(
+        `/api/v1/planPost/${planId}`
+      );
+      console.log('✅ Plan Post API Response:', response.data);
+      return response.data.data;
+    } catch (error: any) {
+      console.error('❌ Plan Post API Error:', error);
+      console.error('Error Response:', error.response?.data);
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Failed to fetch plan post');
     }
   }
 );

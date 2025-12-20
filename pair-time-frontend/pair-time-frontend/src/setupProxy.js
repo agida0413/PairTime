@@ -5,7 +5,7 @@ module.exports = function(app) {
   app.use(
     '/oauth2',
     createProxyMiddleware({
-      target: 'http://localhost:80',
+      target: 'http://localhost:8082',
       changeOrigin: true,
       cookieDomainRewrite: 'localhost',
       onProxyReq: (proxyReq, req, res) => {
@@ -32,7 +32,7 @@ module.exports = function(app) {
   app.use(
     '/api',
     createProxyMiddleware({
-      target: 'http://localhost:80',
+      target: 'http://localhost:8082',
       changeOrigin: true,
       cookieDomainRewrite: 'localhost',
       onProxyReq: (proxyReq, req, res) => {

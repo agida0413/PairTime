@@ -147,6 +147,22 @@ export interface UpdatePlanResponse {
   endAt: string;    // ISO 8601 형식
 }
 
+// File Type Enum
+export enum FileType {
+  IMG = 'IMG',
+  VIDEO = 'VIDEO',
+  DOCUMENT = 'DOCUMENT'
+}
+
+// Create Plan Post Request - 게시글 등록 요청
+export interface CreatePlanPostRequest {
+  planId: number;       // 일정 고유번호 (최소 1)
+  title: string;        // 제목 (필수)
+  content: string;      // 내용 (필수)
+  image?: File;         // 이미지 파일 (선택)
+  fileType: FileType;   // 파일 타입 (필수)
+}
+
 // Update Plan Request - 일정 수정 요청
 export interface UpdatePlanRequest {
   planId: number;       // 일정 고유번호 (최소 1)
@@ -157,6 +173,14 @@ export interface UpdatePlanRequest {
   alarmYn: 'Y' | 'N';   // 알람 여부
   startAt: string;      // ISO 8601 형식
   endAt: string;        // ISO 8601 형식
+}
+
+// Plan Post Response - 게시글 조회 응답
+export interface PlanPostResponse {
+  PlanPostId: number;   // 게시글 고유번호
+  title: string;        // 제목
+  content: string;      // 내용
+  imageUrl: string[];   // 이미지 URL 목록
 }
 
 // Auth Types

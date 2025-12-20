@@ -38,6 +38,7 @@ dependencies {
     implementation 'com.kyj:kyj-lib-core:0.0.1-SNAPSHOT'
     implementation 'com.kyj:kyj-lib-core-security-client:0.0.1-SNAPSHOT'
     implementation 'com.kyj:kyj-lib-core-rdb:0.0.1-SNAPSHOT'
+    implementation 'com.kyj:kyj-lib-core-file:0.0.1-SNAPSHOT'
     implementation 'com.kyj:kyj-lib-core-redis:0.0.1-SNAPSHOT'
 
 

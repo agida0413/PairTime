@@ -6,7 +6,8 @@ import { FindCalendarInfoResponse, PlanCalendarUIType } from '../types';
 import { toast } from 'react-toastify';
 import { useAppSelector } from '../hooks/useAppSelector';
 import { useAppDispatch } from '../hooks/useAppDispatch';
-import { createPlan, fetchCalendarInfo, createPlanExp, fetchPlanExpDetails, deletePlanExpDetail, updatePlanExpDetail, fetchPlanUpdateInfo, updatePlan, deletePlan } from '../features/auth/authSlice';
+import { createPlan, fetchCalendarInfo, createPlanExp, fetchPlanExpDetails, deletePlanExpDetail, updatePlanExpDetail, fetchPlanUpdateInfo, updatePlan, deletePlan, createPlanPost, fetchPlanPost } from '../features/auth/authSlice';
+import { FileType, PlanPostResponse } from '../types';
 
 const CalendarPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -64,6 +65,15 @@ const CalendarPage: React.FC = () => {
   const [editingExpense, setEditingExpense] = useState<{ id: number; title: string; amount: number } | null>(null);
   const [editExpenseTitle, setEditExpenseTitle] = useState('');
   const [editExpenseAmount, setEditExpenseAmount] = useState('');
+
+  // 게시글 작성 관련 상태
+  const [postTitle, setPostTitle] = useState('');
+  const [postContent, setPostContent] = useState('');
+  const [postImage, setPostImage] = useState<File | null>(null);
+  const [postImagePreview, setPostImagePreview] = useState<string>('');
+
+  // 게시글 조회 관련 상태
+  const [currentPlanPost, setCurrentPlanPost] = useState<PlanPostResponse | null>(null);
 
   // 일정 수정 관련 상태
   const [showEditPlanModal, setShowEditPlanModal] = useState(false);
@@ -148,8 +158,42 @@ const CalendarPage: React.FC = () => {
       if (fetchCalendarInfo.fulfilled.match(result)) {
         // API 응답을 Plan 타입으로 변환
         const plans = result.payload.map(convertToPlan);
-        setCalendarPlans(plans);
-        console.log('✅ Calendar plans loaded:', plans);
+
+        // 각 플랜의 지출 정보를 가져와서 업데이트
+        const plansWithExpenses = await Promise.all(
+          plans.map(async (plan) => {
+            try {
+              const expResult = await dispatch(fetchPlanExpDetails(plan.id));
+
+              if (fetchPlanExpDetails.fulfilled.match(expResult)) {
+                const expenseDetails = expResult.payload;
+
+                return {
+                  ...plan,
+                  planExps: expenseDetails.length > 0 ? [{
+                    id: 1,
+                    planExpDetails: expenseDetails.map(detail => ({
+                      id: detail.planExpDId,
+                      title: detail.title,
+                      expenditure: detail.expenditure,
+                      authorName: plan.authorName,
+                      createdAt: plan.createdAt,
+                    })),
+                    authorName: plan.authorName,
+                    createdAt: plan.createdAt,
+                  }] : [],
+                };
+              }
+            } catch (error) {
+              console.error(`Failed to fetch expenses for plan ${plan.id}:`, error);
+            }
+
+            return plan;
+          })
+        );
+
+        setCalendarPlans(plansWithExpenses);
+        console.log('✅ Calendar plans loaded with expenses:', plansWithExpenses);
       }
     };
 
@@ -195,12 +239,13 @@ const CalendarPage: React.FC = () => {
 
   const getTotalExpenseForDate = (day: number): number => {
     const plans = getPlansForDate(day);
-    return plans.reduce((total, plan) => {
+    const total = plans.reduce((total, plan) => {
       const planTotal = plan.planExps.reduce((pTotal, exp) => {
         return pTotal + exp.planExpDetails.reduce((eTotal, detail) => eTotal + detail.expenditure, 0);
       }, 0);
       return total + planTotal;
     }, 0);
+    return total;
   };
 
   const getMonthlyTotalExpense = (): number => {
@@ -209,25 +254,6 @@ const CalendarPage: React.FC = () => {
       total += getTotalExpenseForDate(day);
     }
     return total;
-  };
-
-  const getMonthlyAverageRating = (): number => {
-    let totalRating = 0;
-    let ratingCount = 0;
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const plans = getPlansForDate(day);
-      plans.forEach(plan => {
-        if (plan.planReviews.length > 0) {
-          plan.planReviews.forEach(review => {
-            totalRating += review.rating;
-            ratingCount++;
-          });
-        }
-      });
-    }
-
-    return ratingCount > 0 ? totalRating / ratingCount : 0;
   };
 
   const formatTime = (dateStr: string) => {
@@ -276,6 +302,23 @@ const CalendarPage: React.FC = () => {
       console.error('Failed to fetch expense details:', error);
       setSelectedPlan(plan);
     }
+
+    // 게시글 조회 (커플 일정인 경우에만)
+    if (plan.planType === PlanType.COUPLE) {
+      try {
+        const postResult = await dispatch(fetchPlanPost(plan.id));
+        if (fetchPlanPost.fulfilled.match(postResult)) {
+          setCurrentPlanPost(postResult.payload);
+        } else {
+          setCurrentPlanPost(null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch plan post:', error);
+        setCurrentPlanPost(null);
+      }
+    } else {
+      setCurrentPlanPost(null);
+    }
   };
 
   const handleDayClick = (day: number) => {
@@ -298,9 +341,56 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  const handleAddMemory = () => {
-    setShowAddMemoryModal(false);
-    toast.success('추억이 등록되었습니다! 📸');
+  const handleAddMemory = async () => {
+    console.log('🔵 handleAddMemory called');
+    console.log('postImage:', postImage);
+    console.log('postTitle:', postTitle);
+    console.log('postContent:', postContent);
+
+    if (!selectedPlan) {
+      toast.error('일정을 선택해주세요');
+      return;
+    }
+    if (!postTitle.trim()) {
+      toast.error('제목을 입력해주세요');
+      return;
+    }
+    if (!postContent.trim()) {
+      toast.error('내용을 입력해주세요');
+      return;
+    }
+
+    try {
+      const postRequest = {
+        planId: selectedPlan.id,
+        title: postTitle.trim(),
+        content: postContent.trim(),
+        image: postImage || undefined,
+        fileType: postImage ? FileType.IMG : FileType.DOCUMENT,
+      };
+
+      console.log('📤 Sending post request:', postRequest);
+
+      const result = await dispatch(createPlanPost(postRequest));
+
+      if (createPlanPost.fulfilled.match(result)) {
+        toast.success('추억이 등록되었습니다! 📸');
+        setShowAddMemoryModal(false);
+        resetPostForm();
+
+        // 등록 후 게시글 다시 조회
+        const postResult = await dispatch(fetchPlanPost(selectedPlan.id));
+        if (fetchPlanPost.fulfilled.match(postResult)) {
+          setCurrentPlanPost(postResult.payload);
+        }
+      } else {
+        toast.error('추억 등록에 실패했습니다.');
+        console.error('❌ Post creation failed:', result);
+      }
+    } catch (error) {
+      console.error('❌ Error in handleAddMemory:', error);
+      toast.error('오류가 발생했습니다.');
+    }
   };
 
   const handleAddExpense = async () => {
@@ -350,35 +440,48 @@ const CalendarPage: React.FC = () => {
       if (fetchCalendarInfo.fulfilled.match(calendarResult)) {
         // API 응답을 Plan 타입으로 변환
         const plans = calendarResult.payload.map(convertToPlan);
-        setCalendarPlans(plans);
+
+        // 각 플랜의 지출 정보를 가져와서 업데이트
+        const plansWithExpenses = await Promise.all(
+          plans.map(async (plan) => {
+            try {
+              const expResult = await dispatch(fetchPlanExpDetails(plan.id));
+
+              if (fetchPlanExpDetails.fulfilled.match(expResult)) {
+                const expenseDetails = expResult.payload;
+
+                return {
+                  ...plan,
+                  planExps: expenseDetails.length > 0 ? [{
+                    id: 1,
+                    planExpDetails: expenseDetails.map(detail => ({
+                      id: detail.planExpDId,
+                      title: detail.title,
+                      expenditure: detail.expenditure,
+                      authorName: plan.authorName,
+                      createdAt: plan.createdAt,
+                    })),
+                    authorName: plan.authorName,
+                    createdAt: plan.createdAt,
+                  }] : [],
+                };
+              }
+            } catch (error) {
+              console.error(`Failed to fetch expenses for plan ${plan.id}:`, error);
+            }
+
+            return plan;
+          })
+        );
+
+        setCalendarPlans(plansWithExpenses);
         console.log('✅ Calendar refreshed after creating expense');
 
-        // 선택된 일정의 지출 정보 재조회
+        // 선택된 일정의 지출 정보도 업데이트
         if (selectedPlan && selectedPlan.id === expensePlanId) {
-          const expenseResult = await dispatch(fetchPlanExpDetails(expensePlanId));
-
-          if (fetchPlanExpDetails.fulfilled.match(expenseResult)) {
-            const expenseDetails = expenseResult.payload;
-
-            // Plan 객체에 업데이트된 지출 정보 적용
-            const updatedPlan: Plan = {
-              ...selectedPlan,
-              planExps: expenseDetails.length > 0 ? [{
-                id: 1,
-                planExpDetails: expenseDetails.map(detail => ({
-                  id: detail.planExpDId,
-                  title: detail.title,
-                  expenditure: detail.expenditure,
-                  authorName: selectedPlan.authorName,
-                  createdAt: selectedPlan.createdAt,
-                })),
-                authorName: selectedPlan.authorName,
-                createdAt: selectedPlan.createdAt,
-              }] : [],
-            };
-
-            setSelectedPlan(updatedPlan);
-            console.log('✅ Expense details refreshed for selected plan');
+          const updatedSelectedPlan = plansWithExpenses.find(p => p.id === expensePlanId);
+          if (updatedSelectedPlan) {
+            setSelectedPlan(updatedSelectedPlan);
           }
         }
       }
@@ -399,6 +502,27 @@ const CalendarPage: React.FC = () => {
   const handleCloseExpenseModal = () => {
     setShowAddExpenseModal(false);
     resetExpenseForm();
+  };
+
+  // 게시글 작성 관련 핸들러
+  const resetPostForm = () => {
+    setPostTitle('');
+    setPostContent('');
+    setPostImage(null);
+    setPostImagePreview('');
+  };
+
+  const handlePostImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPostImage(file);
+      // 이미지 미리보기 생성
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPostImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const resetPlanForm = () => {
@@ -822,10 +946,6 @@ const CalendarPage: React.FC = () => {
     toast.success('추억이 삭제되었습니다! 🗑️');
   };
 
-  const handleRating = (rating: number) => {
-    toast.success(`${rating}점으로 평가했습니다! ⭐`);
-  };
-
   const renderDays = () => {
     const days = [];
     const blanks = [];
@@ -960,17 +1080,6 @@ const CalendarPage: React.FC = () => {
               <MonthlyExpenseTitle>💰 이달 우리의 총지출</MonthlyExpenseTitle>
               <MonthlyExpenseAmount>{getMonthlyTotalExpense().toLocaleString()}원</MonthlyExpenseAmount>
             </MonthlyExpenseCard>
-            <MonthlyRatingCard>
-              <MonthlyRatingTitle>⭐ 이달 우리의 데이트 평점</MonthlyRatingTitle>
-              <MonthlyRatingStars>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <MonthlyRatingStar key={star} filled={star <= Math.round(getMonthlyAverageRating())}>
-                    ⭐
-                  </MonthlyRatingStar>
-                ))}
-              </MonthlyRatingStars>
-              <MonthlyRatingValue>{getMonthlyAverageRating().toFixed(1)}점</MonthlyRatingValue>
-            </MonthlyRatingCard>
           </QuickActions>
         </CalendarSection>
 
@@ -999,31 +1108,26 @@ const CalendarPage: React.FC = () => {
               ) : (
                 <>
                   <MemorySection>
-                    {selectedPlan.planPosts.length > 0 ? (
-                      selectedPlan.planPosts.map((post) => (
-                        <MemoryCard key={post.id}>
-                          {post.images.map((img, idx) => (
-                            <MemoryImage key={idx} src={img} alt="memory" />
-                          ))}
-                          <MemoryContent>
-                            <MemoryTitle>{post.title}</MemoryTitle>
-                            <MemoryDescription>{post.content}</MemoryDescription>
-                            <MemoryActions>
-                              <LikeButton isLiked={post.isLiked} onClick={handleLikeToggle}>
-                                ❤️ {post.likes}
-                              </LikeButton>
-                              <MemoryActionButtons>
-                                <MemoryActionButton edit onClick={() => handleEditMemory(post.id)}>
-                                  ✏️ 수정
-                                </MemoryActionButton>
-                                <MemoryActionButton delete onClick={() => handleDeleteMemory(post.id)}>
-                                  🗑️ 삭제
-                                </MemoryActionButton>
-                              </MemoryActionButtons>
-                            </MemoryActions>
-                          </MemoryContent>
-                        </MemoryCard>
-                      ))
+                    {currentPlanPost ? (
+                      <MemoryCard>
+                        {currentPlanPost.imageUrl.map((img, idx) => (
+                          <MemoryImage key={idx} src={img} alt="memory" />
+                        ))}
+                        <MemoryContent>
+                          <MemoryTitle>{currentPlanPost.title}</MemoryTitle>
+                          <MemoryDescription>{currentPlanPost.content}</MemoryDescription>
+                          <MemoryActions>
+                            <MemoryActionButtons>
+                              <MemoryActionButton edit onClick={() => handleEditMemory(currentPlanPost.PlanPostId)}>
+                                ✏️ 수정
+                              </MemoryActionButton>
+                              <MemoryActionButton delete onClick={() => handleDeleteMemory(currentPlanPost.PlanPostId)}>
+                                🗑️ 삭제
+                              </MemoryActionButton>
+                            </MemoryActionButtons>
+                          </MemoryActions>
+                        </MemoryContent>
+                      </MemoryCard>
                     ) : (
                       <EmptyState>
                         <EmptyIcon>📷</EmptyIcon>
@@ -1034,39 +1138,6 @@ const CalendarPage: React.FC = () => {
                       </EmptyState>
                     )}
                   </MemorySection>
-
-                  {selectedPlan.planPosts.length > 0 && (
-                    <>
-                      <Divider />
-                      <SectionTitle>⭐ 이 일정 평가하기</SectionTitle>
-                      <RatingSection>
-                        <RatingStars>
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              selected={selectedPlan.planReviews.length > 0 && selectedPlan.planReviews[0].rating >= star}
-                              onClick={() => handleRating(star)}
-                            >
-                              ⭐
-                            </Star>
-                          ))}
-                        </RatingStars>
-                        {selectedPlan.planReviews.length > 0 && (
-                          <RatingDisplayStars>
-                            {[1, 2, 3, 4, 5].map((star) => {
-                              const avgRating = selectedPlan.planReviews.reduce((sum, r) => sum + r.rating, 0) / selectedPlan.planReviews.length;
-                              return (
-                                <DisplayStar key={star} filled={star <= Math.round(avgRating)}>
-                                  ⭐
-                                </DisplayStar>
-                              );
-                            })}
-                            <RatingValue>{(selectedPlan.planReviews.reduce((sum, r) => sum + r.rating, 0) / selectedPlan.planReviews.length).toFixed(1)}점</RatingValue>
-                          </RatingDisplayStars>
-                        )}
-                      </RatingSection>
-                    </>
-                  )}
 
                   <Divider />
 
@@ -1203,7 +1274,7 @@ const CalendarPage: React.FC = () => {
       </MainContent>
 
       {/* 추억 등록 모달 */}
-      {showAddMemoryModal && (
+      {showAddMemoryModal && selectedPlan && (
         <ModalOverlay onClick={() => setShowAddMemoryModal(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
@@ -1211,20 +1282,50 @@ const CalendarPage: React.FC = () => {
               <CloseButton onClick={() => setShowAddMemoryModal(false)}>✕</CloseButton>
             </ModalHeader>
             <ModalBody>
+              <SelectedPlanDisplay>
+                📌 {selectedPlan.title}
+              </SelectedPlanDisplay>
               <InputGroup>
                 <Label>제목</Label>
-                <Input placeholder="추억의 제목을 입력하세요" />
+                <Input
+                  placeholder="추억의 제목을 입력하세요"
+                  value={postTitle}
+                  onChange={(e) => setPostTitle(e.target.value)}
+                />
               </InputGroup>
               <InputGroup>
                 <Label>내용</Label>
-                <Textarea placeholder="추억을 자세히 설명해주세요" rows={4} />
+                <PostTextArea
+                  placeholder="추억을 자세히 설명해주세요"
+                  rows={6}
+                  value={postContent}
+                  onChange={(e) => setPostContent(e.target.value)}
+                />
               </InputGroup>
               <InputGroup>
-                <Label>사진</Label>
-                <FileInputLabel>
-                  📷 사진 선택하기
-                  <FileInput type="file" accept="image/*" multiple />
-                </FileInputLabel>
+                <Label>사진 (선택)</Label>
+                <FileInputWrapper>
+                  <FileInput
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePostImageChange}
+                    id="memory-image-upload"
+                  />
+                  <FileInputLabel htmlFor="memory-image-upload">
+                    {postImage ? postImage.name : '📷 사진 선택하기'}
+                  </FileInputLabel>
+                </FileInputWrapper>
+                {postImagePreview && (
+                  <ImagePreview>
+                    <PreviewImage src={postImagePreview} alt="미리보기" />
+                    <RemoveImageButton onClick={() => {
+                      setPostImage(null);
+                      setPostImagePreview('');
+                    }}>
+                      ✕ 제거
+                    </RemoveImageButton>
+                  </ImagePreview>
+                )}
               </InputGroup>
             </ModalBody>
             <ModalFooter>
@@ -1585,6 +1686,8 @@ const CalendarPage: React.FC = () => {
           </ModalContent>
         </ModalOverlay>
       )}
+
+      {/* 게시글 작성 모달 */}
     </Container>
   );
 };
@@ -2013,22 +2116,23 @@ interface QuickActionButtonProps {
 
 const QuickActionButton = styled.button<QuickActionButtonProps>`
   flex: 1;
-  padding: 14px 20px;
-  background: ${(props) => (props.primary ? 'white' : 'white')};
-  color: ${(props) => (props.primary ? '#4a5568' : '#4a5568')};
-  border: ${(props) => (props.primary ? '2px solid #4a5568' : '2px solid #4a5568')};
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
+  padding: 24px 32px;
+  background: white;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  min-height: 120px;
+  letter-spacing: 0.5px;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(74, 85, 104, 0.3);
-    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-    color: white;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
   }
 `;
 
@@ -2038,65 +2142,34 @@ const MonthlyExpenseCard = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 14px 20px;
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+  gap: 12px;
+  padding: 24px 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+  min-height: 120px;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+  }
 `;
 
 const MonthlyExpenseTitle = styled.div`
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: white;
   opacity: 0.95;
+  letter-spacing: 0.5px;
 `;
 
 const MonthlyExpenseAmount = styled.div`
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 800;
   color: white;
-`;
-
-const MonthlyRatingCard = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 20px;
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
-`;
-
-const MonthlyRatingTitle = styled.div`
-  font-size: 13px;
-  font-weight: 600;
-  color: #333;
-  opacity: 0.95;
-`;
-
-const MonthlyRatingStars = styled.div`
-  display: flex;
-  gap: 4px;
-`;
-
-interface MonthlyRatingStarProps {
-  filled: boolean;
-}
-
-const MonthlyRatingStar = styled.div<MonthlyRatingStarProps>`
-  font-size: 20px;
-  filter: ${(props) => (props.filled ? 'none' : 'grayscale(100%)')};
-  opacity: ${(props) => (props.filled ? 1 : 0.3)};
-`;
-
-const MonthlyRatingValue = styled.div`
-  font-size: 14px;
-  font-weight: 700;
-  color: #333;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  letter-spacing: -0.5px;
 `;
 
 const SidePanel = styled.div`
@@ -2209,67 +2282,6 @@ const LikeButton = styled.button<LikeButtonProps>`
   &:hover {
     transform: scale(1.05);
   }
-`;
-
-const RatingSection = styled.div`
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-`;
-
-const RatingStars = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-interface StarProps {
-  selected: boolean;
-}
-
-const Star = styled.div<StarProps>`
-  font-size: 32px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  filter: ${(props) => (props.selected ? 'none' : 'grayscale(100%)')};
-  opacity: ${(props) => (props.selected ? 1 : 0.3)};
-
-  &:hover {
-    transform: scale(1.2);
-  }
-`;
-
-const RatingText = styled.div`
-  font-size: 14px;
-  color: #666;
-`;
-
-const RatingDisplayStars = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-`;
-
-interface DisplayStarProps {
-  filled: boolean;
-}
-
-const DisplayStar = styled.div<DisplayStarProps>`
-  font-size: 24px;
-  filter: ${(props) => (props.filled ? 'none' : 'grayscale(100%)')};
-  opacity: ${(props) => (props.filled ? 1 : 0.3)};
-`;
-
-const RatingValue = styled.div`
-  font-size: 14px;
-  font-weight: 600;
-  color: #4a5568;
-  margin-left: 4px;
 `;
 
 const EmptyState = styled.div`
@@ -3207,3 +3219,81 @@ const PlanActionButton = styled.button<PlanActionButtonProps>`
     transform: translateY(0);
   }
 `;
+
+// 게시글 관련 스타일
+const PostSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const AddPostButton = styled.button`
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  }
+`;
+
+
+const FileInputWrapper = styled.div`
+  margin-top: 8px;
+`;
+
+const ImagePreview = styled.div`
+  margin-top: 12px;
+  position: relative;
+  display: inline-block;
+`;
+
+const PreviewImage = styled.img`
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  object-fit: cover;
+`;
+
+const RemoveImageButton = styled.button`
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: block;
+
+  &:hover {
+    background: #c82333;
+  }
+`;
+
+
+const PostTextArea = styled.textarea`
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  resize: vertical;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+`;
+
