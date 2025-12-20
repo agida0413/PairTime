@@ -46,7 +46,7 @@
 ## 🖼️ 스크린샷
 
 ### 메인 화면
-<img width="1899" height="844" alt="캡처본페어타임" src="" />
+<img width="1899" height="844" alt="캡처본페어타임" src="https://github.com/user-attachments/assets/1e91b360-33db-425d-b4e3-e8a5ac01d886" />
 
 <br/>
 
